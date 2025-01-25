@@ -1,4 +1,7 @@
-truth is, I don't know what I'm doing. I am copying the functionality and basic purpose of these 2 apps:
+truth is, I don't know what I'm doing. There is a good chance there are incredibly basic things wrong with this project in all aspects.
+
+I am basically copying the functionality and main purpose of these 2 apps:
+
 https://obedienceapp.com
 https://theembraceapp.com
 
