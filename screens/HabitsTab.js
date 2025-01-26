@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TouchableOpacity, TextInput, Modal, StyleSheet, Alert, BackHandler, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, Text, Button, TouchableOpacity, TextInput, Modal, StyleSheet, Alert, BackHandler, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomWeekPicker from '../tools/CustomWeekPicker';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useTheme } from '../App';
 import sanitizeHtml from 'sanitize-html';
-import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
-import { MaterialIcons } from '@expo/vector-icons';
 
 export default function HabitsTab() {
   const { rewards, punishments, updatePunishmentCount, updateRewardCount } = useRewardsPunishments();
@@ -227,44 +225,38 @@ export default function HabitsTab() {
     return () => backHandler.remove();
   }, [isModalVisible, hasChanges]);
 
-  const renderItem = ({ item, drag, isActive }) => (
-    <ScaleDecorator>
-      <TouchableOpacity
-        style={[theme.taskContainer, item.mode === 'task' ? styles.taskMode : styles.badHabitMode]}
-        onLongPress={drag}
-        disabled={isActive}
-      >
-        <Text style={theme.item}>{item.name}</Text>
-        <Text>{item.description}</Text>
-        <Text>Due: {item.dueDate.toLocaleString()}</Text>
-        <Text>Recurrence: {item.recurrence}</Text>
-        <Text>Days: {item.selectedDays.join(', ')}</Text>
-        <Text>Rewards: {item.rewards.map(r => `${r.name} (x${r.quantity})`).join(', ')}</Text>
-        <Text>Punishments: {item.punishments.map(p => `${p.name} (x${p.quantity})`).join(', ')}</Text>
-        <Text>Progress: {item.progress}</Text>
-        <Text>Slipups: {item.slipups}</Text>
-        <View style={styles.row}>
-          {item.mode === 'task' && (
-            <Button
-              title={item.isCompleted ? "Completed" : "Complete Task"}
-              onPress={() => handleCompleteTask(item)}
-              disabled={item.isCompleted}
-            />
-          )}
-          {item.mode === 'badHabit' && (
-            <Button
-              title="Slipup"
-              onPress={() => handleSlipup(item)}
-            />
-          )}
+  const renderItem = ({ item }) => (
+    <View style={[theme.taskContainer, item.mode === 'task' ? styles.taskMode : styles.badHabitMode]}>
+      <Text style={theme.item}>{item.name}</Text>
+      <Text>{item.description}</Text>
+      <Text>Due: {item.dueDate.toLocaleString()}</Text>
+      <Text>Recurrence: {item.recurrence}</Text>
+      <Text>Days: {item.selectedDays.join(', ')}</Text>
+      <Text>Rewards: {item.rewards.map(r => `${r.name} (x${r.quantity})`).join(', ')}</Text>
+      <Text>Punishments: {item.punishments.map(p => `${p.name} (x${p.quantity})`).join(', ')}</Text>
+      <Text>Progress: {item.progress}</Text>
+      <Text>Slipups: {item.slipups}</Text>
+      <View style={styles.row}>
+        {item.mode === 'task' && (
           <Button
-              title="Delete"
-              onPress={() => handleDeleteTask(item)}
-              color="red"
+            title={item.isCompleted ? "Completed" : "Complete Task"}
+            onPress={() => handleCompleteTask(item)}
+            disabled={item.isCompleted}
           />
-        </View>
-      </TouchableOpacity>
-    </ScaleDecorator>
+        )}
+        {item.mode === 'badHabit' && (
+          <Button
+            title="Slipup"
+            onPress={() => handleSlipup(item)}
+          />
+        )}
+        <Button
+            title="Delete"
+            onPress={() => handleDeleteTask(item)}
+            color="red"
+        />
+      </View>
+    </View>
   );
 
   return (
@@ -276,14 +268,14 @@ export default function HabitsTab() {
         <Text style={styles.addButtonText}>+ Add Task</Text>
       </TouchableOpacity>
 
-      <DraggableFlatList
-        data={tasks}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderItem}
-        onDragEnd={({ data }) => setTasks(data)}
-      />
-
-<Modal visible={isModalVisible} animationType="slide" transparent={true}>
+      <ScrollView>
+        {tasks.map((item, index) => (
+          <View key={index}>
+            {renderItem({ item })}
+          </View>
+        ))}
+      </ScrollView>
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <TouchableWithoutFeedback onPress={() => {
           if (hasChanges) {
             Alert.alert(
@@ -301,7 +293,7 @@ export default function HabitsTab() {
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView 
               behavior={Platform.OS === "ios" ? "padding" : "height"} 
-              style={[styles.modalContainer, { flex: 1, alignSelf: 'center' }]}>
+              style={[styles.modalContainer, { flex: 1, alignSelf: 'center', marginTop: 0 }]}>
               <TouchableWithoutFeedback>
                 <View>
                   {currentStep === 1 && (
@@ -425,7 +417,40 @@ export default function HabitsTab() {
                         ))}
                       </View>
                       <Button title="Next" onPress={() => setCurrentStep(2)} disabled={!taskName} />
-                      <Button title="Cancel" onPress={resetModalFields} />
+                      <Button title="Cancel" onPress={() => {
+                        if (hasChanges) {
+                          Alert.alert(
+                            "Discard changes?",
+                            "You have unsaved changes. Are you sure you want to discard them?",
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                            ]
+                          );
+                        } else {
+                          setIsModalVisible(false);
+                        }
+                      }} />
+                      <View style={styles.infoBox}>
+                        <Text style={styles.infoTitle}>Mode:</Text>
+                        <Text>{mode === 'task' ? 'Task: A positive habit or goal you want to achieve.' : 'Bad Habit: A negative habit you want to reduce or eliminate.'}</Text>
+                        {mode === 'task' && (
+                          <>
+                            <Text style={styles.infoTitle}>Reward Condition:</Text>
+                            <Text>{rewardCondition === 'progress' ? 'Progress: Rewards are given based on progress.' : 'Completion: Rewards are given upon completion.'}</Text>
+                            <Text style={styles.infoTitle}>Punishment Condition:</Text>
+                            <Text>Not Completing: Punishments are given for not completing the task.</Text>
+                          </>
+                        )}
+                        {mode === 'badHabit' && (
+                          <>
+                            <Text style={styles.infoTitle}>Reward Condition:</Text>
+                            <Text>Rewards are given upon not reaching threshold.</Text>
+                            <Text style={styles.infoTitle}>Punishment Condition:</Text>
+                            <Text>{punishmentCondition === 'slipup' ? 'Slipup: Punishments are given for each slipup.' : 'Threshold: Punishments are given when a threshold is reached.'}</Text>
+                          </>
+                        )}
+                      </View>
                     </>
                   )}
                   {currentStep === 2 && (
@@ -484,7 +509,20 @@ export default function HabitsTab() {
                         />
                       )}
                       <Button title="Create Task" onPress={handleCreateTask} />
-                      <Button title="Cancel" onPress={resetModalFields} />
+                      <Button title="Cancel" onPress={() => {
+                        if (hasChanges) {
+                          Alert.alert(
+                            "Discard changes?",
+                            "You have unsaved changes. Are you sure you want to discard them?",
+                            [
+                              { text: "Cancel", style: "cancel" },
+                              { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                            ]
+                          );
+                        } else {
+                          setIsModalVisible(false);
+                        }
+                      }} />
                     </>
                   )}
                 </View>
@@ -551,7 +589,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-    maxHeight: '80%', // Ensure the modal doesn't exceed the screen height
+    paddingBottom: 90, // Extend the bottom to encapsulate the description box
+    maxHeight: '97%', // Ensure the modal doesn't exceed the screen height
     zIndex: 1000, // Ensure the modal is above other elements
   },
 });

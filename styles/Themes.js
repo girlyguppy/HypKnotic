@@ -187,7 +187,7 @@ export const darkTheme = StyleSheet.create({
   },
 });
 
-export const amoledTheme = StyleSheet.create({
+export const latexTheme = StyleSheet.create({
   ...commonStyles,
   container: {
     ...commonStyles.container,
