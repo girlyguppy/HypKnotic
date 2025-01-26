@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../App';
 import ColorPickerWheel from 'react-native-color-picker-wheel';
-import { lavenderTheme, darkTheme, amoledTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme, generateCustomTheme } from '../styles/Themes';
+import { lavenderTheme, darkTheme, latexTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme, generateCustomTheme } from '../styles/Themes';
 
 export default function ThemesScreen({ toggleTheme }) {
   const theme = useTheme();
@@ -18,8 +18,8 @@ export default function ThemesScreen({ toggleTheme }) {
         <TouchableOpacity style={[styles.button, { backgroundColor: darkTheme.button.backgroundColor }]} onPress={() => toggleTheme(darkTheme)}>
           <Text style={[styles.buttonText, { color: darkTheme.buttonText.color }]}>Dark</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: amoledTheme.button.backgroundColor }]} onPress={() => toggleTheme(amoledTheme)}>
-          <Text style={[styles.buttonText, { color: amoledTheme.buttonText.color }]}>AMOLED</Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: latexTheme.button.backgroundColor }]} onPress={() => toggleTheme(latexTheme)}>
+          <Text style={[styles.buttonText, { color: latexTheme.buttonText.color }]}>latex</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, { backgroundColor: babyBlueTheme.button.backgroundColor }]} onPress={() => toggleTheme(babyBlueTheme)}>
           <Text style={[styles.buttonText, { color: babyBlueTheme.buttonText.color }]}>Baby Blue</Text>
