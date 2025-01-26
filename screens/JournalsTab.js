@@ -1,46 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, Modal } from 'react-native';
-import { useTheme } from '../App';
-import CustomDatePicker from '../tools/CustomDatePicker';
+import { View, Text, Button, FlatList, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomDatePicker from '../tools/CustomDatePicker';
+import { useTheme } from '../App';
 
 export default function JournalsTab() {
   const theme = useTheme();
   const [entries, setEntries] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [entryTitle, setEntryTitle] = useState('');
   const [entryContent, setEntryContent] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
-  const [dueTime, setDueTime] = useState(new Date());
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [dueTime, setDueTime] = useState(new Date(new Date().setHours(23, 45, 0, 0))); // Default to 11:45 PM
   const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
-  const [subResponse, setSubResponse] = useState('');
-  const [domComment, setDomComment] = useState('');
 
   const handleCreateEntry = () => {
-    if (entryTitle && entryContent) {
-      const newEntry = {
-        title: entryTitle,
-        content: entryContent,
-        dueDate,
-        dueTime,
-        subResponse: '',
-        domComment: '',
-      };
-      setEntries([...entries, newEntry]);
-      setEntryTitle('');
-      setEntryContent('');
-      setDueDate(new Date());
-      setDueTime(new Date());
-      setIsModalVisible(false);
-    }
+    const newEntry = {
+      title: entryTitle,
+      content: entryContent,
+      dueDate,
+      dueTime,
+      subResponse: '',
+      domComment: '',
+    };
+
+    setEntries([...entries, newEntry]);
+    resetModalFields();
   };
 
   const resetModalFields = () => {
     setEntryTitle('');
     setEntryContent('');
     setDueDate(new Date());
-    setDueTime(new Date());
+    setDueTime(new Date(new Date().setHours(23, 45, 0, 0))); // Reset to 11:45 PM
     setIsModalVisible(false);
+    setIsTimePickerVisible(false);
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -54,15 +48,15 @@ export default function JournalsTab() {
     setDueTime(currentTime);
   };
 
-  const handleSubResponseChange = (index, response) => {
+  const handleSubResponseChange = (index, text) => {
     const updatedEntries = [...entries];
-    updatedEntries[index].subResponse = response;
+    updatedEntries[index].subResponse = text;
     setEntries(updatedEntries);
   };
 
-  const handleDomCommentChange = (index, comment) => {
+  const handleDomCommentChange = (index, text) => {
     const updatedEntries = [...entries];
-    updatedEntries[index].domComment = comment;
+    updatedEntries[index].domComment = text;
     setEntries(updatedEntries);
   };
 
@@ -80,7 +74,7 @@ export default function JournalsTab() {
           <View style={theme.entryContainer}>
             <Text style={theme.item}>{item.title}</Text>
             <Text>{item.content}</Text>
-            <Text>Due: {item.dueDate.toLocaleDateString()} {item.dueTime.toLocaleTimeString()}</Text>
+            <Text>Due: {item.dueDate.toLocaleDateString()} {item.dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
             <TextInput
               style={theme.input}
               placeholder="Sub Response"
@@ -114,7 +108,14 @@ export default function JournalsTab() {
               onChangeText={setEntryContent}
             />
             <CustomDatePicker date={dueDate} onDateChange={handleDateChange} />
-            <Button title="Set Due Time" onPress={() => setIsTimePickerVisible(true)} />
+            <TouchableOpacity
+              style={theme.button}
+              onPress={() => setIsTimePickerVisible(true)}
+            >
+              <Text style={theme.buttonText}>
+                {dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
             {isTimePickerVisible && (
               <DateTimePicker
                 value={dueTime}
@@ -131,3 +132,7 @@ export default function JournalsTab() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // Add your styles here if needed
+});
