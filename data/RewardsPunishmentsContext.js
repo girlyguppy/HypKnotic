@@ -12,8 +12,16 @@ export const RewardsPunishmentsProvider = ({ children }) => {
     setRewards([...rewards, reward]);
   };
 
+  const removeReward = (rewardName) => {
+    setRewards(rewards.filter(reward => reward.name !== rewardName));
+  };
+
   const addPunishment = (punishment) => {
     setPunishments([...punishments, punishment]);
+  };
+
+  const removePunishment = (punishmentName) => {
+    setPunishments(punishments.filter(punishment => punishment.name !== punishmentName));
   };
 
   const updatePunishmentCount = (name, count) => {
@@ -24,10 +32,10 @@ export const RewardsPunishmentsProvider = ({ children }) => {
     );
   };
 
-  const updateRewardCount = (name, count) => {
+  const updateRewardCount = (name, quantity) => {
     setRewards(
       rewards.map((reward) =>
-        reward.name === name ? { ...reward, count } : reward
+        reward.name === name ? { ...reward, quantity } : reward
       )
     );
   };
@@ -38,7 +46,9 @@ export const RewardsPunishmentsProvider = ({ children }) => {
         rewards,
         punishments,
         addReward,
+        removeReward,
         addPunishment,
+        removePunishment,
         updatePunishmentCount,
         updateRewardCount,
       }}
