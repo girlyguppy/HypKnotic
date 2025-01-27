@@ -177,38 +177,51 @@ export default function HabitsTab() {
   };
 
   const handleDeleteTask = (task) => {
-    Alert.alert(
-      "Delete Task",
-      "Are you sure you want to delete this task? You will need to remake it if deleted.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          onPress: () => {
-            const updatedTasks = tasks.filter((t) => t.name !== task.name);
-            setTasks(updatedTasks);
+    if (Platform.OS === 'web') {
+      if (window.confirm("Are you sure you want to delete this task? You will need to remake it if deleted.")) {
+        const updatedTasks = tasks.filter((t) => t.name !== task.name);
+        setTasks(updatedTasks);
+      }
+    } else {
+      Alert.alert(
+        "Delete Task",
+        "Are you sure you want to delete this task? You will need to remake it if deleted.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
           },
-          style: "destructive"
-        }
-      ]
-    );
+          {
+            text: "Delete",
+            onPress: () => {
+              const updatedTasks = tasks.filter((t) => t.name !== task.name);
+              setTasks(updatedTasks);
+            },
+            style: "destructive"
+          }
+        ]
+      );
+    }
   };
 
   useEffect(() => {
     const backAction = () => {
       if (isModalVisible) {
         if (hasChanges) {
-          Alert.alert(
-            "Discard changes?",
-            "You have unsaved changes. Are you sure you want to discard them?",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Discard", onPress: resetModalFields, style: "destructive" }
-            ]
-          );
+          if (Platform.OS === 'web') {
+            if (window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+              resetModalFields();
+            }
+          } else {
+            Alert.alert(
+              "Discard changes?",
+              "You have unsaved changes. Are you sure you want to discard them?",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Discard", onPress: resetModalFields, style: "destructive" }
+              ]
+            );
+          }
         } else {
           setIsModalVisible(false);
         }
@@ -278,14 +291,20 @@ export default function HabitsTab() {
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <TouchableWithoutFeedback onPress={() => {
           if (hasChanges) {
-            Alert.alert(
-              "Discard changes?",
-              "You have unsaved changes. Are you sure you want to discard them?",
-              [
-                { text: "Cancel", style: "cancel" },
-                { text: "Discard", onPress: resetModalFields, style: "destructive" }
-              ]
-            );
+            if (Platform.OS === 'web') {
+              if (window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                resetModalFields();
+              }
+            } else {
+              Alert.alert(
+                "Discard changes?",
+                "You have unsaved changes. Are you sure you want to discard them?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                ]
+              );
+            }
           } else {
             setIsModalVisible(false);
           }
@@ -419,14 +438,20 @@ export default function HabitsTab() {
                       <Button title="Next" onPress={() => setCurrentStep(2)} disabled={!taskName} />
                       <Button title="Cancel" onPress={() => {
                         if (hasChanges) {
-                          Alert.alert(
-                            "Discard changes?",
-                            "You have unsaved changes. Are you sure you want to discard them?",
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              { text: "Discard", onPress: resetModalFields, style: "destructive" }
-                            ]
-                          );
+                          if (Platform.OS === 'web') {
+                            if (window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                              resetModalFields();
+                            }
+                          } else {
+                            Alert.alert(
+                              "Discard changes?",
+                              "You have unsaved changes. Are you sure you want to discard them?",
+                              [
+                                { text: "Cancel", style: "cancel" },
+                                { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                              ]
+                            );
+                          }
                         } else {
                           setIsModalVisible(false);
                         }
@@ -511,14 +536,20 @@ export default function HabitsTab() {
                       <Button title="Create Task" onPress={handleCreateTask} />
                       <Button title="Cancel" onPress={() => {
                         if (hasChanges) {
-                          Alert.alert(
-                            "Discard changes?",
-                            "You have unsaved changes. Are you sure you want to discard them?",
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              { text: "Discard", onPress: resetModalFields, style: "destructive" }
-                            ]
-                          );
+                          if (Platform.OS === 'web') {
+                            if (window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                              resetModalFields();
+                            }
+                          } else {
+                            Alert.alert(
+                              "Discard changes?",
+                              "You have unsaved changes. Are you sure you want to discard them?",
+                              [
+                                { text: "Cancel", style: "cancel" },
+                                { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                              ]
+                            );
+                          }
                         } else {
                           setIsModalVisible(false);
                         }
