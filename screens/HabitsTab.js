@@ -6,11 +6,12 @@ import CustomWeekPicker from '../tools/CustomWeekPicker';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useTheme } from '../App';
 import sanitizeHtml from 'sanitize-html';
+import { useHabits } from '../data/HabitsContext';
 
 export default function HabitsTab() {
+  const { tasks, setTasks, addTask } = useHabits();
   const { rewards, punishments, updatePunishmentCount, updateRewardCount } = useRewardsPunishments();
   const theme = useTheme();
-  const [tasks, setTasks] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [taskName, setTaskName] = useState('');
@@ -31,6 +32,12 @@ export default function HabitsTab() {
   const [punishmentCondition, setPunishmentCondition] = useState('slipup'); // Options: 'slipup', 'threshold'
   const [mode, setMode] = useState('task'); // Options: 'task', 'badHabit'
   const [hasChanges, setHasChanges] = useState(false);
+  const [requiredCompletion, setRequiredCompletion] = useState(1);
+  const [maxSlipups, setMaxSlipups] = useState(3);
+  const [progressPoints, setProgressPoints] = useState(0);
+  const [completionPoints, setCompletionPoints] = useState(0);
+  const [slipupPoints, setSlipupPoints] = useState(0);
+  const [failurePoints, setFailurePoints] = useState(0);
 
   const handleCreateTask = () => {
     if (!taskName) return;
@@ -55,6 +62,8 @@ export default function HabitsTab() {
       punishmentCondition,
       mode,
       isCompleted: false,
+      requiredCompletion: parseInt(requiredCompletion) || 1,
+      maxSlipups: parseInt(maxSlipups) || 3
     };
 
     setTasks([...tasks, newTask]);
@@ -80,6 +89,8 @@ export default function HabitsTab() {
     setMode('task');
     setCurrentStep(1);
     setHasChanges(false);
+    setRequiredCompletion(1);
+    setMaxSlipups(3);
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -100,11 +111,20 @@ export default function HabitsTab() {
     const updatedTasks = tasks.map((t) => {
       if (t.name === task.name) {
         const newProgress = t.progress + 1;
-        const isCompleted = newProgress >= t.rewardPoints;
+        const isCompleted = newProgress >= t.requiredCompletion;
+        
         if (t.rewardCondition === 'progress') {
           t.rewards.forEach((reward) => {
             updateRewardCount(reward.name, reward.quantity);
           });
+          // Add progress points
+          updatePoints(t.progressPoints);
+        } else if (t.rewardCondition === 'completion' && isCompleted) {
+          t.rewards.forEach((reward) => {
+            updateRewardCount(reward.name, reward.quantity);
+          });
+          // Add completion points
+          updatePoints(t.completionPoints);
         }
         return { ...t, progress: newProgress, isCompleted };
       }
@@ -118,12 +138,22 @@ export default function HabitsTab() {
     const updatedTasks = tasks.map((t) => {
       if (t.name === task.name) {
         const newSlipups = t.slipups + 1;
+        const hasFailed = newSlipups >= t.maxSlipups;
+
         if (t.punishmentCondition === 'slipup') {
+          t.punishments.forEach((punishment) => {
+            updatePunishmentCount(punishment.name, punishment.quantity); // Use quantity instead of count
+          });
+          // Add slipup points
+          updatePoints(t.slipupPoints);
+        } else if (t.punishmentCondition === 'threshold' && hasFailed) {
           t.punishments.forEach((punishment) => {
             updatePunishmentCount(punishment.name, punishment.quantity);
           });
+          // Add failure points
+          updatePoints(t.failurePoints);
         }
-        return { ...t, slipups: newSlipups };
+        return { ...t, slipups: newSlipups, hasFailed };
       }
       return t;
     });
@@ -247,8 +277,12 @@ export default function HabitsTab() {
       <Text>Days: {item.selectedDays.join(', ')}</Text>
       <Text>Rewards: {item.rewards.map(r => `${r.name} (x${r.quantity})`).join(', ')}</Text>
       <Text>Punishments: {item.punishments.map(p => `${p.name} (x${p.quantity})`).join(', ')}</Text>
-      <Text>Progress: {item.progress}</Text>
-      <Text>Slipups: {item.slipups}</Text>
+      {item.mode === 'task' && (
+        <Text>Progress: {item.progress}/{item.requiredCompletion}</Text>
+      )}
+      {item.mode === 'badHabit' && (
+        <Text>Slipups: {item.slipups}/{item.maxSlipups}</Text>
+      )}
       <View style={styles.row}>
         {item.mode === 'task' && (
           <Button
@@ -350,34 +384,64 @@ export default function HabitsTab() {
                       {mode === 'task' && (
                         <>
                           <Text>Reward Condition:</Text>
-                          <Picker
-                            selectedValue={rewardCondition}
-                            onValueChange={(itemValue) => {
-                              setRewardCondition(itemValue);
-                              setHasChanges(true);
-                            }}
-                          >
-                            <Picker.Item label="Progress" value="progress" />
-                            <Picker.Item label="Completion" value="completion" />
-                          </Picker>
+                          <View style={styles.row}>
+                            <Picker
+                              style={styles.picker}
+                              selectedValue={rewardCondition}
+                              onValueChange={(itemValue) => {
+                                setRewardCondition(itemValue);
+                                setHasChanges(true);
+                              }}
+                            >
+                              <Picker.Item label="Progress" value="progress" />
+                              <Picker.Item label="Completion" value="completion" />
+                            </Picker>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="Required Completion"
+                              value={String(requiredCompletion)}
+                              onChangeText={(text) => {
+                                setRequiredCompletion(parseInt(text) || 1);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
                         </>
                       )}
                       {mode === 'badHabit' && (
                         <>
                           <Text>Punishment Condition:</Text>
-                          <Picker
-                            selectedValue={punishmentCondition}
-                            onValueChange={(itemValue) => {
-                              setPunishmentCondition(itemValue);
-                              setHasChanges(true);
-                            }}
-                          >
-                            <Picker.Item label="Slipup" value="slipup" />
-                            <Picker.Item label="Threshold" value="threshold" />
-                          </Picker>
+                          <View style={styles.row}>
+                            <Picker
+                              style={styles.picker}
+                              selectedValue={punishmentCondition}
+                              onValueChange={(itemValue) => {
+                                setPunishmentCondition(itemValue);
+                                setHasChanges(true);
+                              }}
+                            >
+                              <Picker.Item label="Slipup" value="slipup" />
+                              <Picker.Item label="Threshold" value="threshold" />
+                            </Picker>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="Max Slipups"
+                              value={String(maxSlipups)}
+                              onChangeText={(text) => {
+                                setMaxSlipups(parseInt(text) || 3);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
                         </>
                       )}
-                      <Text>Rewards upon completion:</Text>
+                      {mode === 'task' && rewardCondition === 'progress' ? (
+                        <Text>Rewards upon progress:</Text>
+                      ) : (
+                        <Text>Rewards upon completion:</Text>
+                      )}
                       <Picker
                         selectedValue=""
                         onValueChange={(itemValue) => {
@@ -476,6 +540,93 @@ export default function HabitsTab() {
                           </>
                         )}
                       </View>
+                      {mode === 'task' && (
+                        <>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Required Goal Amount:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="Goal amount"
+                              value={String(requiredCompletion)}
+                              onChangeText={(text) => {
+                                setRequiredCompletion(parseInt(text) || 1);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Points per Progress:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="0"
+                              value={String(progressPoints)}
+                              onChangeText={(text) => {
+                                setProgressPoints(parseInt(text) || 0);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Points on Completion:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="0"
+                              value={String(completionPoints)}
+                              onChangeText={(text) => {
+                                setCompletionPoints(parseInt(text) || 0);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                        </>
+                      )}
+
+                      {mode === 'badHabit' && (
+                        <>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Failure Threshold Amount:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="Max slipups before failure"
+                              value={String(maxSlipups)}
+                              onChangeText={(text) => {
+                                setMaxSlipups(parseInt(text) || 3);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Points per Slipup:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="0"
+                              value={String(slipupPoints)}
+                              onChangeText={(text) => {
+                                setSlipupPoints(parseInt(text) || 0);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                          <View style={styles.formGroup}>
+                            <Text style={styles.label}>Points on Failure:</Text>
+                            <TextInput
+                              style={[styles.input, styles.numberInput]}
+                              placeholder="0"
+                              value={String(failurePoints)}
+                              onChangeText={(text) => {
+                                setFailurePoints(parseInt(text) || 0);
+                                setHasChanges(true);
+                              }}
+                              keyboardType="numeric"
+                            />
+                          </View>
+                        </>
+                      )}
                     </>
                   )}
                   {currentStep === 2 && (
@@ -624,4 +775,23 @@ const styles = StyleSheet.create({
     maxHeight: '97%', // Ensure the modal doesn't exceed the screen height
     zIndex: 1000, // Ensure the modal is above other elements
   },
+  picker: {
+    flex: 1,
+  },
+  numberInput: {
+    width: '30%',
+    marginLeft: 10,
+    padding: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+  },
+  formGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+  }
 });

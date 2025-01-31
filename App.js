@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { RewardsPunishmentsProvider } from './data/RewardsPunishmentsContext';
+import { HabitsProvider } from './data/HabitsContext';
 import RewardsTab from './screens/RewardsTab';
 import PunishmentsTab from './screens/PunishmentsTab';
 import HabitsTab from './screens/HabitsTab';
@@ -13,8 +14,9 @@ import ThemesScreen from './screens/ThemesScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import DeveloperTab from './screens/DeveloperTab';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { lavenderTheme, darkTheme, amoledTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme } from './styles/Themes'; // Import all themes
+import { lavenderTheme, darkTheme, latexTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme } from './styles/Themes'; // Import all themes
 import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
@@ -44,21 +46,24 @@ function CustomDrawerContent(props) {
   );
 }
 
-function MainTabs() {
+function MainTabs({ isDeveloperMode }) {
   const theme = useTheme();
-
+  
   return (
     <Tab.Navigator
       screenOptions={({ navigation }) => ({
-        tabBarStyle: { backgroundColor: theme.container.backgroundColor },
-        tabBarActiveTintColor: '#2196F3',
-        headerStyle: { backgroundColor: theme.header.backgroundColor },
-        headerTintColor: theme.header.textColor,
-        headerRight: () => (
-          <TouchableOpacity onPress={() => navigation.openDrawer()} style={{ marginRight: 10 }}>
-            <Ionicons name="person-circle-outline" size={30} color={theme.header.iconColor} />
+        headerLeft: () => (
+          <TouchableOpacity 
+            onPress={() => navigation.openDrawer()}
+            style={{ marginLeft: 15 }}
+          >
+            <Ionicons name="menu" size={30} color={theme.header.iconColor} />
           </TouchableOpacity>
         ),
+        headerStyle: { backgroundColor: theme.header.backgroundColor },
+        headerTintColor: theme.header.textColor,
+        tabBarStyle: { backgroundColor: theme.container.backgroundColor },
+        tabBarActiveTintColor: '#2196F3',
       })}
     >
       <Tab.Screen
@@ -96,36 +101,68 @@ function MainTabs() {
           tabBarIcon: () => <Text style={{ fontSize: 24 }}>📖</Text>,
         }}
       />
+      {isDeveloperMode && (
+        <Tab.Screen
+          name="Developer"
+          component={DeveloperTab}
+          options={{
+            tabBarIcon: () => <Text style={{ fontSize: 24 }}>🛠️</Text>,
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 }
 
-function DrawerScreens({ toggleTheme }) {
+function DrawerScreens({ toggleTheme, isDeveloperMode, setIsDeveloperMode }) {
   const theme = useTheme();
+
+  const commonScreenOptions = ({ navigation }) => ({
+    headerShown: true,
+    headerLeft: () => (
+      <TouchableOpacity 
+        onPress={() => navigation.openDrawer()}
+        style={{ marginLeft: 15 }}
+      >
+        <Ionicons name="menu" size={30} color={theme.header.iconColor} />
+      </TouchableOpacity>
+    ),
+    headerStyle: { backgroundColor: theme.header.backgroundColor },
+    headerTintColor: theme.header.textColor,
+  });
 
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       drawerPosition="right"
-      screenOptions={{
-        headerStyle: { backgroundColor: theme.header.backgroundColor },
-        headerTintColor: theme.header.textColor,
-      }}
+      screenOptions={commonScreenOptions}
     >
-      <Drawer.Screen name="Home" component={MainTabs} options={{ headerShown: false }} />
-      <Drawer.Screen name="Profile" component={ProfileScreen} />
-      <Drawer.Screen name="Themes">
-        {props => <ThemesScreen {...props} toggleTheme={toggleTheme} />}
+      <Drawer.Screen 
+        name="MainTabs" 
+        options={{ headerShown: false }}
+      >
+        {(props) => <MainTabs {...props} isDeveloperMode={isDeveloperMode} />}
       </Drawer.Screen>
+      <Drawer.Screen name="Profile" component={ProfileScreen} />
+      <Drawer.Screen name="Themes" component={ThemesScreen} />
       <Drawer.Screen name="Notifications" component={NotificationsScreen} />
       <Drawer.Screen name="History" component={HistoryScreen} />
-      <Drawer.Screen name="Settings" component={SettingsScreen} />
+      <Drawer.Screen name="Settings">
+        {(props) => (
+          <SettingsScreen
+            {...props}
+            isDeveloperMode={isDeveloperMode}
+            setIsDeveloperMode={setIsDeveloperMode}
+          />
+        )}
+      </Drawer.Screen>
     </Drawer.Navigator>
   );
 }
 
 export default function App() {
   const [theme, setTheme] = useState(lavenderTheme);
+  const [isDeveloperMode, setIsDeveloperMode] = useState(false);
 
   const toggleTheme = (selectedTheme) => {
     setTheme(selectedTheme);
@@ -134,9 +171,11 @@ export default function App() {
   return (
     <ThemeContext.Provider value={theme}>
       <RewardsPunishmentsProvider>
-        <NavigationContainer>
-          <DrawerScreens toggleTheme={toggleTheme} />
-        </NavigationContainer>
+        <HabitsProvider>
+          <NavigationContainer>
+            <DrawerScreens toggleTheme={toggleTheme} isDeveloperMode={isDeveloperMode} setIsDeveloperMode={setIsDeveloperMode} />
+          </NavigationContainer>
+        </HabitsProvider>
       </RewardsPunishmentsProvider>
     </ThemeContext.Provider>
   );
