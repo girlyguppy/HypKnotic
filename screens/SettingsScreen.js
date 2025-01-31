@@ -1,14 +1,36 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Switch, StyleSheet } from 'react-native';
 import { useTheme } from '../App';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ isDeveloperMode, setIsDeveloperMode }) {
   const theme = useTheme();
 
   return (
     <View style={theme.container}>
       <Text style={theme.title}>Settings</Text>
-      {/* Add Settings content here */}
+      
+      <View style={styles.setting}>
+        <Text style={styles.settingText}>Developer Mode</Text>
+        <Switch
+          value={isDeveloperMode}
+          onValueChange={setIsDeveloperMode}
+        />
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  setting: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  settingText: {
+    fontSize: 16,
+  }
+});
