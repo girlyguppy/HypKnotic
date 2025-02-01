@@ -31,8 +31,8 @@ export default function HistoryScreen() {
         data={data}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={[styles.entryContainer, { backgroundColor: theme.entryContainer.backgroundColor }]}>
-            <Text style={{ color: theme.textColor }}>{item}</Text>
+          <View style={[styles.entryContainer, { backgroundColor: theme.entryContainer?.backgroundColor || '#FFFFFF' }]}>
+            <Text style={{ color: theme.textColor || '#000000' }}>{item}</Text>
           </View>
         )}
       />
@@ -40,19 +40,19 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.container.backgroundColor }]}>
-      <View style={[styles.sidebar, { backgroundColor: theme.drawer.backgroundColor }]}>
+    <View style={[styles.container, { backgroundColor: theme.container?.backgroundColor || '#FFFFFF' }]}>
+      <View style={[styles.sidebar, { backgroundColor: theme.drawer?.backgroundColor || '#FFFFFF' }]}>
         {['Rewards', 'Punishments', 'Habits', 'Notes', 'Journals'].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[
               styles.tabButton,
               activeTab === tab && styles.activeTabButton,
-              { backgroundColor: activeTab === tab ? theme.activeTabButton.backgroundColor : theme.tabButton.backgroundColor }
+              { backgroundColor: activeTab === tab ? theme.activeTabButton?.backgroundColor || '#0056b3' : theme.tabButton?.backgroundColor || '#FFFFFF' }
             ]}
             onPress={() => setActiveTab(tab)}
           >
-            <Text style={[styles.tabButtonText, { color: theme.tabButtonText.color }]}>{tab}</Text>
+            <Text style={[styles.tabButtonText, { color: theme.tabButtonText?.color || '#000000' }]}>{tab}</Text>
           </TouchableOpacity>
         ))}
       </View>
