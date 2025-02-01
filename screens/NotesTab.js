@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
-import { useTheme } from '../App';
+// Remove the custom useTheme import and use Jotai instead:
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function NotesTab() {
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
+  
   const [activeTab, setActiveTab] = useState('Rules');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [title, setTitle] = useState('');

@@ -4,14 +4,14 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomWeekPicker from '../tools/CustomWeekPicker';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
-import { useTheme } from '../App';
 import sanitizeHtml from 'sanitize-html';
 import { useHabits } from '../data/HabitsContext';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function HabitsTab() {
   const { tasks, setTasks, addTask } = useHabits();
   const { rewards, punishments, updatePunishmentCount, updateRewardCount } = useRewardsPunishments();
-  const theme = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [taskName, setTaskName] = useState('');
@@ -38,6 +38,7 @@ export default function HabitsTab() {
   const [completionPoints, setCompletionPoints] = useState(0);
   const [slipupPoints, setSlipupPoints] = useState(0);
   const [failurePoints, setFailurePoints] = useState(0);
+  const [theme] = useAtom(themeAtom);
 
   const handleCreateTask = () => {
     if (!taskName) return;

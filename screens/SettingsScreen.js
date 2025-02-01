@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, Switch, StyleSheet } from 'react-native';
-import { useTheme } from '../App';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function SettingsScreen({ isDeveloperMode, setIsDeveloperMode }) {
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
 
   return (
     <View style={theme.container}>
@@ -32,5 +33,5 @@ const styles = StyleSheet.create({
   },
   settingText: {
     fontSize: 16,
-  }
+  },
 });
