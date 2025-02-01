@@ -18,7 +18,7 @@ import DeveloperTab from './screens/DeveloperTab';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Provider, useAtom } from 'jotai';
 import { themeAtom } from './atoms/themeAtom';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
