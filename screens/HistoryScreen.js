@@ -31,8 +31,8 @@ export default function HistoryScreen() {
         data={data}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={theme.entryContainer}>
-            <Text style={theme.item}>{item}</Text>
+          <View style={[styles.entryContainer, { backgroundColor: theme.entryContainer.backgroundColor }]}>
+            <Text style={{ color: theme.textColor }}>{item}</Text>
           </View>
         )}
       />
@@ -40,7 +40,7 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={theme.container}>
+    <View style={[styles.container, { backgroundColor: theme.container.backgroundColor }]}>
       <View style={[styles.sidebar, { backgroundColor: theme.drawer.backgroundColor }]}>
         {['Rewards', 'Punishments', 'Habits', 'Notes', 'Journals'].map((tab) => (
           <TouchableOpacity
@@ -64,6 +64,10 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+  },
   sidebar: {
     width: 150,
     padding: 10,
@@ -83,5 +87,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 10,
+  },
+  entryContainer: {
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
   },
 });
