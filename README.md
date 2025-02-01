@@ -9,4 +9,4 @@ they are 2 linked apps, which work pretty well, but a lot of the good features (
 you both have to pay for it to get full use of the features. so I decided that I would try to create one that is free and open source.
 
 I don't actually know how to code, I'm just using copilot for now 💀
-view HELPME.md for things I need help with.. 
+view [HELPME](HypKnotic/main/your-subfolder/HELPME.md) for things I need help with.. 
