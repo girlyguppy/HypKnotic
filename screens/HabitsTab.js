@@ -43,8 +43,9 @@ export default function HabitsTab() {
   const [progressPoints, setProgressPoints] = useState(0);
   const [completionPoints, setCompletionPoints] = useState(0);
   const [slipupPoints, setSlipupPoints] = useState(0);
-  const [failurePoints, setFailurePoints] = useState(0);
   const [theme] = useAtom(themeAtom);
+  const [successPoints, setSuccessPoints] = useState(0);
+  const [failurePoints, setFailurePoints] = useState(0);
 
   const handleCreateTask = () => {
     if (!taskName) return;
@@ -57,8 +58,8 @@ export default function HabitsTab() {
       description: sanitizedTaskDescription,
       rewards: selectedRewards,
       punishments: selectedPunishments,
-      rewardPoints,
-      punishmentPoints,
+      successPoints,
+      failurePoints,
       dueDate,
       dueTime,
       recurrence,
@@ -377,123 +378,9 @@ export default function HabitsTab() {
                         <Picker.Item label="Task" value="task" />
                         <Picker.Item label="Bad Habit" value="badHabit" />
                       </Picker>
-                      {mode === 'task' && (
-                        <>
-                          <Text>Reward Condition:</Text>
-                          <View style={styles.row}>
-                            <Picker
-                              style={styles.picker}
-                              selectedValue={rewardCondition}
-                              onValueChange={(itemValue) => {
-                                setRewardCondition(itemValue);
-                                setHasChanges(true);
-                              }}
-                            >
-                              <Picker.Item label="Progress" value="progress" />
-                              <Picker.Item label="Completion" value="completion" />
-                            </Picker>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="Required Completion"
-                              value={String(requiredCompletion)}
-                              onChangeText={(text) => {
-                                setRequiredCompletion(parseInt(text) || 1);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                        </>
-                      )}
-                      {mode === 'badHabit' && (
-                        <>
-                          <Text>Punishment Condition:</Text>
-                          <View style={styles.row}>
-                            <Picker
-                              style={styles.picker}
-                              selectedValue={punishmentCondition}
-                              onValueChange={(itemValue) => {
-                                setPunishmentCondition(itemValue);
-                                setHasChanges(true);
-                              }}
-                            >
-                              <Picker.Item label="Slipup" value="slipup" />
-                              <Picker.Item label="Threshold" value="threshold" />
-                            </Picker>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="Max Slipups"
-                              value={String(maxSlipups)}
-                              onChangeText={(text) => {
-                                setMaxSlipups(parseInt(text) || 3);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                        </>
-                      )}
-                      {mode === 'task' && rewardCondition === 'progress' ? (
-                        <Text>Rewards upon progress:</Text>
-                      ) : (
-                        <Text>Rewards upon completion:</Text>
-                      )}
-                      <Picker
-                        selectedValue=""
-                        onValueChange={(itemValue) => {
-                          handleRewardSelect(itemValue);
-                          setHasChanges(true);
-                        }}
-                      >
-                        <Picker.Item label="Select" value="" />
-                        {rewards.map((reward, index) => (
-                          <Picker.Item key={index} label={reward.name} value={reward.name} />
-                        ))}
-                      </Picker>
-                      <View>
-                        {selectedRewards.map((reward, index) => (
-                          <View key={index} style={theme.selectedItemContainer}>
-                            <Text>{reward.name}</Text>
-                            <TextInput
-                              style={theme.quantityInput}
-                              keyboardType="numeric"
-                              value={String(reward.quantity)}
-                              onChangeText={(text) => {
-                                handleQuantityChange('reward', reward.name, parseInt(text));
-                                setHasChanges(true);
-                              }}
-                            />
-                          </View>
-                        ))}
-                      </View>
-                      <Text>Punishments on failure:</Text>
-                      <Picker
-                        selectedValue=""
-                        onValueChange={(itemValue) => {
-                          handlePunishmentSelect(itemValue);
-                          setHasChanges(true);
-                        }}
-                      >
-                        <Picker.Item label="Select" value="" />
-                        {punishments.map((punishment, index) => (
-                          <Picker.Item key={index} label={punishment.name} value={punishment.name} />
-                        ))}
-                      </Picker>
-                      <View>
-                        {selectedPunishments.map((punishment, index) => (
-                          <View key={index} style={theme.selectedItemContainer}>
-                            <Text>{punishment.name}</Text>
-                            <TextInput
-                              style={theme.quantityInput}
-                              keyboardType="numeric"
-                              value={String(punishment.quantity)}
-                              onChangeText={(text) => {
-                                handleQuantityChange('punishment', punishment.name, parseInt(text));
-                                setHasChanges(true);
-                              }}
-                            />
-                          </View>
-                        ))}
+                      <View style={styles.infoBox}>
+                        <Text style={styles.infoTitle}>Mode:</Text>
+                        <Text>{mode === 'task' ? 'Task: A positive habit or goal you want to achieve.' : 'Bad Habit: A negative habit you want to reduce or eliminate.'}</Text>
                       </View>
                       <Button title="Next" onPress={() => setCurrentStep(2)} disabled={!taskName} />
                       <Button title="Cancel" onPress={() => {
@@ -516,116 +403,152 @@ export default function HabitsTab() {
                           setIsModalVisible(false);
                         }
                       }} />
-                      <View style={styles.infoBox}>
-                        <Text style={styles.infoTitle}>Mode:</Text>
-                        <Text>{mode === 'task' ? 'Task: A positive habit or goal you want to achieve.' : 'Bad Habit: A negative habit you want to reduce or eliminate.'}</Text>
-                        {mode === 'task' && (
-                          <>
-                            <Text style={styles.infoTitle}>Reward Condition:</Text>
-                            <Text>{rewardCondition === 'progress' ? 'Progress: Rewards are given based on progress.' : 'Completion: Rewards are given upon completion.'}</Text>
-                            <Text style={styles.infoTitle}>Punishment Condition:</Text>
-                            <Text>Not Completing: Punishments are given for not completing the task.</Text>
-                          </>
-                        )}
-                        {mode === 'badHabit' && (
-                          <>
-                            <Text style={styles.infoTitle}>Reward Condition:</Text>
-                            <Text>Rewards are given upon not reaching threshold.</Text>
-                            <Text style={styles.infoTitle}>Punishment Condition:</Text>
-                            <Text>{punishmentCondition === 'slipup' ? 'Slipup: Punishments are given for each slipup.' : 'Threshold: Punishments are given when a threshold is reached.'}</Text>
-                          </>
-                        )}
-                      </View>
-                      {mode === 'task' && (
-                        <>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Required Goal Amount:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="Goal amount"
-                              value={String(requiredCompletion)}
-                              onChangeText={(text) => {
-                                setRequiredCompletion(parseInt(text) || 1);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Points per Progress:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="0"
-                              value={String(progressPoints)}
-                              onChangeText={(text) => {
-                                setProgressPoints(parseInt(text) || 0);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Points on Completion:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="0"
-                              value={String(completionPoints)}
-                              onChangeText={(text) => {
-                                setCompletionPoints(parseInt(text) || 0);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                        </>
-                      )}
-
-                      {mode === 'badHabit' && (
-                        <>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Failure Threshold Amount:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="Max slipups before failure"
-                              value={String(maxSlipups)}
-                              onChangeText={(text) => {
-                                setMaxSlipups(parseInt(text) || 3);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Points per Slipup:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="0"
-                              value={String(slipupPoints)}
-                              onChangeText={(text) => {
-                                setSlipupPoints(parseInt(text) || 0);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                          <View style={styles.formGroup}>
-                            <Text style={styles.label}>Points on Failure:</Text>
-                            <TextInput
-                              style={[styles.input, styles.numberInput]}
-                              placeholder="0"
-                              value={String(failurePoints)}
-                              onChangeText={(text) => {
-                                setFailurePoints(parseInt(text) || 0);
-                                setHasChanges(true);
-                              }}
-                              keyboardType="numeric"
-                            />
-                          </View>
-                        </>
-                      )}
                     </>
                   )}
                   {currentStep === 2 && (
+                    <>
+                      <Text style={theme.title}>{mode === 'task' ? 'Reward and Punishment Conditions' : 'Reward and Punishment Conditions'}</Text>
+                      <Text>Amount of points to add on reward:</Text>
+                      <TextInput
+                        style={theme.input}
+                        placeholder="Points for Success"
+                        value={String(successPoints)}
+                        onChangeText={(text) => {
+                          setSuccessPoints(parseInt(text) || 0);
+                          setHasChanges(true);
+                        }}
+                        keyboardType="numeric"
+                      />
+                      <Text>Amount of points to subtract on punishment:</Text>
+                      <TextInput
+                        style={theme.input}
+                        placeholder="Points for Failure"
+                        value={String(failurePoints)}
+                        onChangeText={(text) => {
+                          setFailurePoints(parseInt(text) || 0);
+                          setHasChanges(true);
+                        }}
+                        keyboardType="numeric"
+                      />
+                      {mode === 'task' && (
+                        <>
+                          <Text>Reward Condition:</Text>
+                          <Picker
+                            selectedValue={rewardCondition}
+                            onValueChange={(itemValue) => {
+                              setRewardCondition(itemValue);
+                              setHasChanges(true);
+                            }}
+                          >
+                            <Picker.Item label="Progress" value="progress" />
+                            <Picker.Item label="Completion" value="completion" />
+                          </Picker>
+                        </>
+                      )}
+                      {mode === 'badHabit' && (
+                        <>
+                          <Text>Punishment Condition:</Text>
+                          <Picker
+                            selectedValue={punishmentCondition}
+                            onValueChange={(itemValue) => {
+                              setPunishmentCondition(itemValue);
+                              setHasChanges(true);
+                            }}
+                          >
+                            <Picker.Item label="Slipup" value="slipup" />
+                            <Picker.Item label="Threshold" value="threshold" />
+                          </Picker>
+                        </>
+                      )}
+                      <View style={styles.infoBox}>
+                        <Text style={styles.infoTitle}>Condition Description:</Text>
+                        <Text>{mode === 'task' ? 
+                          (rewardCondition === 'progress' ? 'Rewards are given based on progress.' : 'Rewards are given upon completion.') : 
+                          (punishmentCondition === 'slipup' ? 'Punishments are given for each slipup.' : 'Punishments are given if the threshold is reached.')}</Text>
+                      </View>
+                      <Text>Rewards:</Text>
+                      <Picker
+                        selectedValue=""
+                        onValueChange={(itemValue) => {
+                          handleRewardSelect(itemValue);
+                          setHasChanges(true);
+                        }}
+                      >
+                        <Picker.Item label="Select" value="" />
+                        {rewards.map((item, index) => (
+                          <Picker.Item key={index} label={item.name} value={item.name} />
+                        ))}
+                      </Picker>
+                      <View>
+                        {selectedRewards.map((item, index) => (
+                          <View key={index} style={theme.selectedItemContainer}>
+                            <Text>{item.name}</Text>
+                            <TextInput
+                              style={theme.quantityInput}
+                              keyboardType="numeric"
+                              value={String(item.quantity)}
+                              onChangeText={(text) => {
+                                handleQuantityChange('reward', item.name, parseInt(text));
+                                setHasChanges(true);
+                              }}
+                            />
+                          </View>
+                        ))}
+                      </View>
+                      <Text>Punishments:</Text>
+                      <Picker
+                        selectedValue=""
+                        onValueChange={(itemValue) => {
+                          handlePunishmentSelect(itemValue);
+                          setHasChanges(true);
+                        }}
+                      >
+                        <Picker.Item label="Select" value="" />
+                        {punishments.map((item, index) => (
+                          <Picker.Item key={index} label={item.name} value={item.name} />
+                        ))}
+                      </Picker>
+                      <View>
+                        {selectedPunishments.map((item, index) => (
+                          <View key={index} style={theme.selectedItemContainer}>
+                            <Text>{item.name}</Text>
+                            <TextInput
+                              style={theme.quantityInput}
+                              keyboardType="numeric"
+                              value={String(item.quantity)}
+                              onChangeText={(text) => {
+                                handleQuantityChange('punishment', item.name, parseInt(text));
+                                setHasChanges(true);
+                              }}
+                            />
+                          </View>
+                        ))}
+                      </View>
+                      <Button title="Next" onPress={() => setCurrentStep(3)} />
+                      <Button title="Back" onPress={() => setCurrentStep(1)} />
+                      <Button title="Cancel" onPress={() => {
+                        if (hasChanges) {
+                          if (Platform.OS === 'web') {
+                            if (window.confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+                              resetModalFields();
+                            }
+                          } else {
+                            Alert.alert(
+                              "Discard changes?",
+                              "You have unsaved changes. Are you sure you want to discard them?",
+                              [
+                                { text: "Cancel", style: "cancel" },
+                                { text: "Discard", onPress: resetModalFields, style: "destructive" }
+                              ]
+                            );
+                          }
+                        } else {
+                          setIsModalVisible(false);
+                        }
+                      }} />
+                    </>
+                  )}
+                  {currentStep === 3 && (
                     <>
                       <Text style={theme.title}>Set Recurrence and Due Time</Text>
                       <Text>Recurrence:</Text>
@@ -681,6 +604,7 @@ export default function HabitsTab() {
                         />
                       )}
                       <Button title="Create Task" onPress={handleCreateTask} />
+                      <Button title="Back" onPress={() => setCurrentStep(2)} />
                       <Button title="Cancel" onPress={() => {
                         if (hasChanges) {
                           if (Platform.OS === 'web') {
