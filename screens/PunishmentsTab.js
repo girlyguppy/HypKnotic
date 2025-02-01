@@ -1,17 +1,153 @@
-import React, { useState } from 'react';
-import { View, Text, Button, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Platform, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Platform, TouchableWithoutFeedback } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 
 export default function PunishmentsTab() {
-  // Move useAtom hook inside the component function
   const [theme] = useAtom(themeAtom);
-
   const { punishments, addPunishment, removePunishment, updatePunishmentCount } = useRewardsPunishments();
   const [punishmentName, setPunishmentName] = useState('');
   const [punishmentDescription, setPunishmentDescription] = useState('');
   const [showAddPunishment, setShowAddPunishment] = useState(false);
+
+  const dynamicStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: theme.container.backgroundColor,
+    },
+    addButton: {
+      backgroundColor: theme.button.backgroundColor,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 10,
+    },
+    addButtonText: {
+      color: theme.buttonText.color,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    punishmentContainer: {
+      backgroundColor: theme.punishmentBackground,
+      padding: 20,
+      borderRadius: 10,
+      marginVertical: 10,
+      borderWidth: 1,
+      borderColor: theme.borderColor || '#000',
+    },
+    punishmentName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.title.color,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    incrementButton: {
+      backgroundColor: theme.incrementButtonBackground,
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      marginRight: 5,
+    },
+    incrementButtonText: {
+      color: theme.incrementButtonTextColor,
+      fontSize: 16,
+    },
+    decrementButton: {
+      backgroundColor: theme.decrementButtonBackground,
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      marginLeft: 5,
+    },
+    decrementButtonText: {
+      color: theme.decrementButtonTextColor,
+      fontSize: 16,
+    },
+    completeButton: {
+      backgroundColor: theme.completeButtonBackground,
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 10,
+    },
+    completeButtonText: {
+      color: theme.completeButtonTextColor,
+      fontSize: 16,
+    },
+    deleteButton: {
+      backgroundColor: theme.deleteButtonBackground,
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flex: 1,
+      marginLeft: 5,
+    },
+    deleteButtonText: {
+      color: theme.deleteButtonTextColor,
+      fontSize: 16,
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.modalOverlayBackground || 'rgba(0, 0, 0, 0.5)',
+    },
+    form: {
+      backgroundColor: theme.formBackground || '#FFF',
+      padding: 20,
+      borderRadius: 10,
+      marginVertical: 10,
+    },
+    input: {
+      backgroundColor: theme.inputBackground || '#FFF',
+      padding: 10,
+      borderRadius: 5,
+      marginVertical: 5,
+      borderWidth: 1,
+      borderColor: theme.inputBorderColor || '#000',
+      color: theme.textColor,
+    },
+    confirmButton: {
+      backgroundColor: theme.confirmButtonBackground,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 5,
+    },
+    confirmButtonText: {
+      color: theme.confirmButtonTextColor,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    cancelButton: {
+      backgroundColor: theme.cancelButtonBackground,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 5,
+    },
+    cancelButtonText: {
+      color: theme.cancelButtonTextColor,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+  }), [theme]);
 
   const handleAddPunishment = () => {
     if (punishmentName) {
@@ -61,9 +197,7 @@ export default function PunishmentsTab() {
           },
           {
             text: "Delete",
-            onPress: () => {
-              removePunishment(punishment.name);
-            },
+            onPress: () => removePunishment(punishment.name),
             style: "destructive"
           }
         ]
@@ -72,49 +206,35 @@ export default function PunishmentsTab() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Your component UI using theme styles */}
-      <Text style={theme.title}>Punishments</Text>
-      {/* Render punishments list etc. */}
+    <View style={dynamicStyles.container}>
+      <Text style={dynamicStyles.punishmentName}>Punishments</Text>
 
-      <TouchableOpacity style={styles.addButton} onPress={() => setShowAddPunishment(true)}>
-        <Text style={styles.addButtonText}>+ Add Punishment</Text>
+      <TouchableOpacity style={dynamicStyles.addButton} onPress={() => setShowAddPunishment(true)}>
+        <Text style={dynamicStyles.addButtonText}>+ Add Punishment</Text>
       </TouchableOpacity>
 
       <FlatList
         data={punishments}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={styles.punishmentContainer}>
-            <Text style={styles.punishmentName}>{item.name}</Text>
-            {item.description ? <Text>{item.description}</Text> : null}
-            <Text>Count: {item.count}</Text>
-            <View style={styles.row}>
-              <TouchableOpacity
-                style={styles.incrementButton}
-                onPress={() => handleIncrementCount(item)}
-              >
-                <Text style={styles.incrementButtonText}>+</Text>
+          <View style={dynamicStyles.punishmentContainer}>
+            <Text style={dynamicStyles.punishmentName}>{item.name}</Text>
+            {item.description ? <Text style={{ color: theme.textColor }}>{item.description}</Text> : null}
+            <Text style={{ color: theme.textColor }}>Count: {item.count}</Text>
+            <View style={dynamicStyles.row}>
+              <TouchableOpacity style={dynamicStyles.incrementButton} onPress={() => handleIncrementCount(item)}>
+                <Text style={dynamicStyles.incrementButtonText}>+</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.decrementButton}
-                onPress={() => handleDecrementCount(item)}
-              >
-                <Text style={styles.decrementButtonText}>-</Text>
+              <TouchableOpacity style={dynamicStyles.decrementButton} onPress={() => handleDecrementCount(item)}>
+                <Text style={dynamicStyles.decrementButtonText}>-</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeletePunishment(item)}
-              >
-                <Text style={styles.deleteButtonText}>Delete</Text>
+              <TouchableOpacity style={dynamicStyles.deleteButton} onPress={() => handleDeletePunishment(item)}>
+                <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
             {item.count > 0 && (
-              <TouchableOpacity
-                style={styles.completeButton}
-                onPress={() => handleCompletePunishment(item)}
-              >
-                <Text style={styles.completeButtonText}>Complete</Text>
+              <TouchableOpacity style={dynamicStyles.completeButton} onPress={() => handleCompletePunishment(item)}>
+                <Text style={dynamicStyles.completeButtonText}>Complete</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -123,27 +243,29 @@ export default function PunishmentsTab() {
 
       <Modal visible={showAddPunishment} animationType="slide" transparent={true}>
         <TouchableWithoutFeedback onPress={() => setShowAddPunishment(false)}>
-          <View style={styles.modalOverlay}>
+          <View style={dynamicStyles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.form}>
+              <View style={dynamicStyles.form}>
                 <TextInput
-                  style={[styles.input, { minWidth: '80%' }]}
+                  style={[dynamicStyles.input, { minWidth: '80%' }]}
                   placeholder="Punishment Name"
+                  placeholderTextColor={theme.placeholderTextColor}
                   value={punishmentName}
                   onChangeText={setPunishmentName}
                 />
                 <TextInput
-                  style={[styles.input, { minWidth: '80%' }]}
+                  style={[dynamicStyles.input, { minWidth: '80%' }]}
                   placeholder="Punishment Description"
+                  placeholderTextColor={theme.placeholderTextColor}
                   value={punishmentDescription}
                   onChangeText={setPunishmentDescription}
                   multiline
                 />
-                <TouchableOpacity style={styles.confirmButton} onPress={handleAddPunishment}>
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                <TouchableOpacity style={dynamicStyles.confirmButton} onPress={handleAddPunishment}>
+                  <Text style={dynamicStyles.confirmButtonText}>Confirm</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setShowAddPunishment(false)}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                <TouchableOpacity style={dynamicStyles.cancelButton} onPress={() => setShowAddPunishment(false)}>
+                  <Text style={dynamicStyles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -153,138 +275,3 @@ export default function PunishmentsTab() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  addButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  punishmentContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 10,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-  },
-  punishmentName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  incrementButton: {
-    backgroundColor: '#28A745',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    marginRight: 5,
-  },
-  incrementButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  decrementButton: {
-    backgroundColor: '#FFC107',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    marginLeft: 5,
-  },
-  decrementButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  completeButton: {
-    backgroundColor: '#17A2B8',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  completeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  deleteButton: {
-    backgroundColor: '#DC3545',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    marginLeft: 5,
-  },
-  deleteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  form: {
-    backgroundColor: '#F0F0F0',
-    padding: 20,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 5,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-  },
-  confirmButton: {
-    backgroundColor: '#28A745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 5,
-  },
-  confirmButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    backgroundColor: '#DC3545',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 5,
-  },
-  cancelButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
