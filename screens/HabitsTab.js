@@ -61,7 +61,7 @@ export default function HabitsTab() {
       successPoints,
       failurePoints,
       dueDate,
-      dueTime,
+      dueTime, // Ensure dueTime is correctly used
       recurrence,
       selectedDays,
       progress: 0,
@@ -110,7 +110,11 @@ export default function HabitsTab() {
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || dueTime;
     setShowTimePicker(false);
-    setDueTime(currentTime);
+    // Ensure the selected time is correctly set with respect to the current date
+    const updatedTime = new Date(dueDate);
+    updatedTime.setHours(currentTime.getHours());
+    updatedTime.setMinutes(currentTime.getMinutes());
+    setDueTime(updatedTime);
   };
 
   const handleRecurrenceChange = (type) => setRecurrence(type);
