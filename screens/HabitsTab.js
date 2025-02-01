@@ -9,6 +9,12 @@ import { useHabits } from '../data/HabitsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 
+const updatePoints = (points) => {
+  // Logic to update points
+  console.log(`Updating points by ${points}`);
+  // Add your logic to update the points here
+};
+
 export default function HabitsTab() {
   const { tasks, setTasks, addTask } = useHabits();
   const { rewards, punishments, updatePunishmentCount, updateRewardCount } = useRewardsPunishments();
@@ -109,30 +115,19 @@ export default function HabitsTab() {
   const handleRecurrenceChange = (type) => setRecurrence(type);
 
   const handleCompleteTask = (task) => {
-    const updatedTasks = tasks.map((t) => {
-      if (t.name === task.name) {
-        const newProgress = t.progress + 1;
-        const isCompleted = newProgress >= t.requiredCompletion;
-        
-        if (t.rewardCondition === 'progress') {
-          t.rewards.forEach((reward) => {
-            updateRewardCount(reward.name, reward.quantity);
-          });
-          // Add progress points
-          updatePoints(t.progressPoints);
-        } else if (t.rewardCondition === 'completion' && isCompleted) {
-          t.rewards.forEach((reward) => {
-            updateRewardCount(reward.name, reward.quantity);
-          });
-          // Add completion points
-          updatePoints(t.completionPoints);
-        }
-        return { ...t, progress: newProgress, isCompleted };
-      }
-      return t;
-    });
+    // Logic to complete the task
+    task.isCompleted = true;
+    updatePoints(task.rewardPoints);
+    // Update the task state
+    setTasks([...tasks]);
+  };
 
-    setTasks(updatedTasks);
+  const handleFailTask = (task) => {
+    // Logic to fail the task
+    task.isCompleted = false;
+    updatePoints(task.punishmentPoints);
+    // Update the task state
+    setTasks([...tasks]);
   };
 
   const handleSlipup = (task) => {
