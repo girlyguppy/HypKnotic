@@ -485,12 +485,12 @@ export default function HabitsTab() {
                           <Picker.Item key={index} label={item.name} value={item.name} />
                         ))}
                       </Picker>
-                      <ScrollView style={styles.scrollContainer}>
+                      <ScrollView style={styles.scrollContainer} persistentScrollbar={true}>
                         {selectedRewards.map((item, index) => (
                           <View key={index} style={styles.row}>
                             <Text style={styles.rewardText}>{item.name}</Text>
                             <TextInput
-                              style={[theme.quantityInput, styles.quantityBox]}
+                              style={theme.quantityInput}
                               keyboardType="numeric"
                               value={String(item.quantity)}
                               onChangeText={(text) => {
@@ -515,19 +515,19 @@ export default function HabitsTab() {
                           <Picker.Item key={index} label={item.name} value={item.name} />
                         ))}
                       </Picker>
-                      <ScrollView style={styles.scrollContainer}>
+                      <ScrollView style={styles.scrollContainer} persistentScrollbar={true}>
                         {selectedPunishments.map((item, index) => (
                           <View key={index} style={styles.row}>
                             <Text style={styles.punishmentText}>{item.name}</Text>
                             <TextInput
-                              style={[theme.quantityInput, styles.quantityBox]}
+                              style={theme.quantityInput}
                               keyboardType="numeric"
                               value={String(item.quantity)}
                               onChangeText={(text) => {
                                 handleQuantityChange('punishment', item.name, parseInt(text));
                                 setHasChanges(true);
                               }}
-                              scrollEnabled={false} // Disable scrolling within the quantity box
+                              scrollEnabled={true} // Disable scrolling within the quantity box
                             />
                           </View>
                         ))}
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   scrollContainer: {
-    maxHeight: 150, // Adjust the height as needed
+    maxHeight: 50, // Adjust the height as needed
     marginVertical: 10,
   },
   quantityBox: {
