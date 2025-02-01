@@ -1,5 +1,7 @@
 truth is, I don't know what I'm doing. There is a good chance there are incredibly basic things wrong with this project in all aspects.
 
+view [HELPME](HELPME.md) for things I need help with if you want to contribute but don't know what to add
+
 I am basically copying the functionality and main purpose of these 2 apps:
 
 https://obedienceapp.com
@@ -9,4 +11,3 @@ they are 2 linked apps, which work pretty well, but a lot of the good features (
 you both have to pay for it to get full use of the features. so I decided that I would try to create one that is free and open source.
 
 I don't actually know how to code, I'm just using copilot for now 💀
-view [HELPME](HELPME.md) for things I need help with.. 
