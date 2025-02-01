@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal, TouchableWithoutFeedback, Platform } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
-import { useTheme } from '../App';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function RewardsTab() {
   const { rewards, addReward, removeReward, updateRewardCount } = useRewardsPunishments();
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
   const [rewardName, setRewardName] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
   const [rewardPoints, setRewardPoints] = useState(0);

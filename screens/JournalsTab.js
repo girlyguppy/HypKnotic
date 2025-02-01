@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, TextInput, Modal, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomDatePicker from '../tools/CustomDatePicker';
-import { useTheme } from '../App';
+// Remove the custom useTheme import and use Jotai instead
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function JournalsTab() {
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
   const [entries, setEntries] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [entryTitle, setEntryTitle] = useState('');

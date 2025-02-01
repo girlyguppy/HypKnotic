@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
-import { useTheme } from '../App';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 import { useHabits } from '../data/HabitsContext';
 
 // All possible combinations to test
@@ -14,7 +15,7 @@ const RECURRENCES = ['none', 'daily', 'weekly', 'monthly'];
 const DAYS = ['Monday', 'Wednesday', 'Friday']; // Sample days for weekly
 
 export default function DeveloperTab() {
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
   const { rewards, punishments, addReward, addPunishment } = useRewardsPunishments();
   const { addTask } = useHabits();
   const [rewardCounter, setRewardCounter] = useState(1);

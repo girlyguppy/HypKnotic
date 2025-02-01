@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { useTheme } from '../App';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function NotificationsScreen() {
-  const theme = useTheme();
+  const [theme] = useAtom(themeAtom);
 
   return (
     <View style={theme.container}>

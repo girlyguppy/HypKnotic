@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Alert, Platform, TouchableWithoutFeedback } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
-import { useTheme } from '../App';
+import { useAtom } from 'jotai';
+import { themeAtom } from '../atoms/themeAtom';
 
 export default function PunishmentsTab() {
+  // Move useAtom hook inside the component function
+  const [theme] = useAtom(themeAtom);
+
   const { punishments, addPunishment, removePunishment, updatePunishmentCount } = useRewardsPunishments();
-  const theme = useTheme();
   const [punishmentName, setPunishmentName] = useState('');
   const [punishmentDescription, setPunishmentDescription] = useState('');
   const [showAddPunishment, setShowAddPunishment] = useState(false);
@@ -69,8 +72,10 @@ export default function PunishmentsTab() {
   };
 
   return (
-    <View style={theme.container}>
+    <View style={styles.container}>
+      {/* Your component UI using theme styles */}
       <Text style={theme.title}>Punishments</Text>
+      {/* Render punishments list etc. */}
 
       <TouchableOpacity style={styles.addButton} onPress={() => setShowAddPunishment(true)}>
         <Text style={styles.addButtonText}>+ Add Punishment</Text>
@@ -150,6 +155,10 @@ export default function PunishmentsTab() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
   addButton: {
     backgroundColor: '#007BFF',
     padding: 15,
