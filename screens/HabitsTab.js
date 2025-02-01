@@ -408,28 +408,34 @@ export default function HabitsTab() {
                   {currentStep === 2 && (
                     <>
                       <Text style={theme.title}>{mode === 'task' ? 'Reward and Punishment Conditions' : 'Reward and Punishment Conditions'}</Text>
-                      <Text>Amount of points to add on reward:</Text>
-                      <TextInput
-                        style={theme.input}
-                        placeholder="Points for Success"
-                        value={String(successPoints)}
-                        onChangeText={(text) => {
-                          setSuccessPoints(parseInt(text) || 0);
-                          setHasChanges(true);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <Text>Amount of points to subtract on punishment:</Text>
-                      <TextInput
-                        style={theme.input}
-                        placeholder="Points for Failure"
-                        value={String(failurePoints)}
-                        onChangeText={(text) => {
-                          setFailurePoints(parseInt(text) || 0);
-                          setHasChanges(true);
-                        }}
-                        keyboardType="numeric"
-                      />
+                      <View style={styles.row}>
+                        <View style={styles.halfWidth}>
+                          <Text>Amount of points to add on reward:</Text>
+                          <TextInput
+                            style={theme.input}
+                            placeholder="Points for Success"
+                            value={String(successPoints)}
+                            onChangeText={(text) => {
+                              setSuccessPoints(parseInt(text) || 0);
+                              setHasChanges(true);
+                            }}
+                            keyboardType="numeric"
+                          />
+                        </View>
+                        <View style={styles.halfWidth}>
+                          <Text>Amount of points to subtract on punishment:</Text>
+                          <TextInput
+                            style={theme.input}
+                            placeholder="Points for Failure"
+                            value={String(failurePoints)}
+                            onChangeText={(text) => {
+                              setFailurePoints(parseInt(text) || 0);
+                              setHasChanges(true);
+                            }}
+                            keyboardType="numeric"
+                          />
+                        </View>
+                      </View>
                       {mode === 'task' && (
                         <>
                           <Text>Reward Condition:</Text>
@@ -479,22 +485,23 @@ export default function HabitsTab() {
                           <Picker.Item key={index} label={item.name} value={item.name} />
                         ))}
                       </Picker>
-                      <View>
+                      <ScrollView style={styles.scrollContainer}>
                         {selectedRewards.map((item, index) => (
-                          <View key={index} style={theme.selectedItemContainer}>
-                            <Text>{item.name}</Text>
+                          <View key={index} style={styles.row}>
+                            <Text style={styles.rewardText}>{item.name}</Text>
                             <TextInput
-                              style={theme.quantityInput}
+                              style={[theme.quantityInput, styles.quantityBox]}
                               keyboardType="numeric"
                               value={String(item.quantity)}
                               onChangeText={(text) => {
                                 handleQuantityChange('reward', item.name, parseInt(text));
                                 setHasChanges(true);
                               }}
+                              scrollEnabled={false} // Disable scrolling within the quantity box
                             />
                           </View>
                         ))}
-                      </View>
+                      </ScrollView>
                       <Text>Punishments:</Text>
                       <Picker
                         selectedValue=""
@@ -508,22 +515,23 @@ export default function HabitsTab() {
                           <Picker.Item key={index} label={item.name} value={item.name} />
                         ))}
                       </Picker>
-                      <View>
+                      <ScrollView style={styles.scrollContainer}>
                         {selectedPunishments.map((item, index) => (
-                          <View key={index} style={theme.selectedItemContainer}>
-                            <Text>{item.name}</Text>
+                          <View key={index} style={styles.row}>
+                            <Text style={styles.punishmentText}>{item.name}</Text>
                             <TextInput
-                              style={theme.quantityInput}
+                              style={[theme.quantityInput, styles.quantityBox]}
                               keyboardType="numeric"
                               value={String(item.quantity)}
                               onChangeText={(text) => {
                                 handleQuantityChange('punishment', item.name, parseInt(text));
                                 setHasChanges(true);
                               }}
+                              scrollEnabled={false} // Disable scrolling within the quantity box
                             />
                           </View>
                         ))}
-                      </View>
+                      </ScrollView>
                       <Button title="Next" onPress={() => setCurrentStep(3)} />
                       <Button title="Back" onPress={() => setCurrentStep(1)} />
                       <Button title="Cancel" onPress={() => {
@@ -672,6 +680,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginVertical: 5,
   },
   halfWidth: {
     width: '48%',
@@ -713,5 +722,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
     color: '#333',
-  }
+  },
+  scrollContainer: {
+    maxHeight: 150, // Adjust the height as needed
+    marginVertical: 10,
+  },
+  quantityBox: {
+    width: 50,
+    height: 30,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    textAlign: 'center',
+  },
+  rewardText: {
+    flex: 1,
+    marginRight: 10,
+  },
+  punishmentText: {
+    flex: 1,
+    marginRight: 10,
+  },
 });
