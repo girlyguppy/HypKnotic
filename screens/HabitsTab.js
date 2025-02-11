@@ -114,6 +114,8 @@ export default function HabitsTab() {
     const updatedTime = new Date(dueDate);
     updatedTime.setHours(currentTime.getHours());
     updatedTime.setMinutes(currentTime.getMinutes());
+    updatedTime.setSeconds(0);
+    updatedTime.setMilliseconds(0);
     setDueTime(updatedTime);
   };
 
@@ -273,7 +275,7 @@ export default function HabitsTab() {
     <View style={[theme.taskContainer, item.mode === 'task' ? styles.taskMode : styles.badHabitMode]}>
       <Text style={theme.item}>{item.name}</Text>
       <Text>{item.description}</Text>
-      <Text>Due: {item.dueDate.toLocaleString()}</Text>
+      <Text>Due: {item.dueDate.toLocaleDateString()} {item.dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
       <Text>Recurrence: {item.recurrence}</Text>
       <Text>Days: {item.selectedDays.join(', ')}</Text>
       <Text>Rewards: {item.rewards.map(r => `${r.name} (x${r.quantity})`).join(', ')}</Text>
