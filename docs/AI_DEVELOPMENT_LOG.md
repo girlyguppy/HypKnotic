@@ -260,25 +260,32 @@ npx expo start --web --clear
 17. Add ModeSwitcher component for relationship/mode switching
 18. Update RelationshipContext with currentMode, toggleMode, and activeRelationship
 19. Integrate ModeSwitcher into App.js header
+20. Add global mode toggle in Profile and drag-to-reorder in HabitsTab
 
 ---
 
 ## 🏗️ Current Architecture
 
-### Role System
-**NO GLOBAL ROLES!** Each relationship has its own role.
+### Mode System (Updated 2026-02-05)
+**GLOBAL MODE TOGGLE** - not per-partner switching!
 
-| Mode | Description |
-|------|-------------|
-| Solo | You are both Dom and Sub to yourself - toggle between modes |
-| Dom to Partner | You create tasks/rewards for them |
-| Sub to Partner | You complete tasks they assign |
-| Switch with Partner | Toggle between Dom and Sub views |
+The mode toggle is in Profile Screen and affects the ENTIRE app:
+- **Sub Mode** (💗): See and complete ALL tasks from ALL your Doms on one page
+- **Dom Mode** (🔒): Create tasks and assign them to ANY of your Subs
+
+All tasks appear on the same page with "Assigned by: [Partner Name]" labels.
 
 ### Key Components
 - `SetupScreen` - First-run: Solo vs Partner choice (role selected when pairing)
-- `ModeSwitcher` - Header component for switching relationships and modes
-- `RelationshipContext` - Manages relationships, currentMode, and permissions
+- `ModeSwitcher` - Header component for switching relationships (being simplified)
+- `ProfileScreen` - Global mode toggle (Dom/Sub buttons)
+- `HabitsTab` - All tasks with drag-to-reorder
+
+### Drag-to-Reorder
+- Click "↕️ Reorder Tasks" button to enter reorder mode
+- Each task shows "↑ Move Up" / "↓ Move Down" buttons
+- Click "✓ Done Reordering" when finished
+- Or long-press any task to toggle reorder mode
 
 ### Data Flow
 ```
