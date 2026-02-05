@@ -116,6 +116,12 @@ export default function HabitsTab() {
   const handleRecurrenceChange = (type) => setRecurrence(type);
 
   const handleCompleteTask = (task) => {
+    // Create a lookup map for rewards
+    const rewardsMap = rewards.reduce((map, r) => {
+      map[r.name] = r;
+      return map;
+    }, {});
+
     const updatedTasks = tasks.map((t) => {
       if (t.name === task.name) {
         const newProgress = t.progress + 1;
@@ -124,22 +130,28 @@ export default function HabitsTab() {
         // Give rewards based on condition
         if (t.rewardCondition === 'progress') {
           // Give points for each progress increment
-          if (t.successPoints > 0) {
+          if (t.successPoints && t.successPoints > 0) {
             addPoints(t.successPoints);
           }
           // Give rewards for each progress
-          t.rewards.forEach((reward) => {
-            updateRewardCount(reward.name, (rewards.find(r => r.name === reward.name)?.quantity || 0) + reward.quantity);
-          });
+          if (t.rewards && t.rewards.length > 0) {
+            t.rewards.forEach((reward) => {
+              const currentReward = rewardsMap[reward.name];
+              updateRewardCount(reward.name, (currentReward?.quantity || 0) + reward.quantity);
+            });
+          }
         } else if (t.rewardCondition === 'completion' && isNowCompleted) {
           // Give points only on completion
-          if (t.successPoints > 0) {
+          if (t.successPoints && t.successPoints > 0) {
             addPoints(t.successPoints);
           }
           // Give rewards only on completion
-          t.rewards.forEach((reward) => {
-            updateRewardCount(reward.name, (rewards.find(r => r.name === reward.name)?.quantity || 0) + reward.quantity);
-          });
+          if (t.rewards && t.rewards.length > 0) {
+            t.rewards.forEach((reward) => {
+              const currentReward = rewardsMap[reward.name];
+              updateRewardCount(reward.name, (currentReward?.quantity || 0) + reward.quantity);
+            });
+          }
         }
 
         return { ...t, progress: newProgress, isCompleted: isNowCompleted };
@@ -151,19 +163,27 @@ export default function HabitsTab() {
   };
 
   const handleFailTask = (task) => {
+    // Create a lookup map for punishments
+    const punishmentsMap = punishments.reduce((map, p) => {
+      map[p.name] = p;
+      return map;
+    }, {});
+
     const updatedTasks = tasks.map((t) => {
       if (t.name === task.name) {
         // Subtract points for failure
-        if (t.failurePoints > 0) {
+        if (t.failurePoints && t.failurePoints > 0) {
           subtractPoints(t.failurePoints);
         }
         // Apply punishments
-        t.punishments.forEach((punishment) => {
-          const currentPunishment = punishments.find(p => p.name === punishment.name);
-          if (currentPunishment) {
-            updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
-          }
-        });
+        if (t.punishments && t.punishments.length > 0) {
+          t.punishments.forEach((punishment) => {
+            const currentPunishment = punishmentsMap[punishment.name];
+            if (currentPunishment) {
+              updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+            }
+          });
+        }
         return { ...t, hasFailed: true };
       }
       return t;
@@ -173,6 +193,12 @@ export default function HabitsTab() {
   };
 
   const handleSlipup = (task) => {
+    // Create a lookup map for punishments
+    const punishmentsMap = punishments.reduce((map, p) => {
+      map[p.name] = p;
+      return map;
+    }, {});
+
     const updatedTasks = tasks.map((t) => {
       if (t.name === task.name) {
         const newSlipups = t.slipups + 1;
@@ -180,26 +206,30 @@ export default function HabitsTab() {
 
         if (t.punishmentCondition === 'slipup') {
           // Apply punishments for each slipup
-          t.punishments.forEach((punishment) => {
-            const currentPunishment = punishments.find(p => p.name === punishment.name);
-            if (currentPunishment) {
-              updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
-            }
-          });
+          if (t.punishments && t.punishments.length > 0) {
+            t.punishments.forEach((punishment) => {
+              const currentPunishment = punishmentsMap[punishment.name];
+              if (currentPunishment) {
+                updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+              }
+            });
+          }
           // Subtract slipup points
-          if (t.failurePoints > 0) {
+          if (t.failurePoints && t.failurePoints > 0) {
             subtractPoints(t.failurePoints);
           }
         } else if (t.punishmentCondition === 'threshold' && hasFailed) {
           // Apply punishments only when threshold is reached
-          t.punishments.forEach((punishment) => {
-            const currentPunishment = punishments.find(p => p.name === punishment.name);
-            if (currentPunishment) {
-              updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
-            }
-          });
+          if (t.punishments && t.punishments.length > 0) {
+            t.punishments.forEach((punishment) => {
+              const currentPunishment = punishmentsMap[punishment.name];
+              if (currentPunishment) {
+                updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+              }
+            });
+          }
           // Subtract failure points
-          if (t.failurePoints > 0) {
+          if (t.failurePoints && t.failurePoints > 0) {
             subtractPoints(t.failurePoints);
           }
         }

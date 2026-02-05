@@ -128,7 +128,7 @@ export default function ProfileScreen() {
           >
             <Text style={[styles.roleIcon]}>👤</Text>
             <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Sub</Text>
-            <Text style={[styles.roleDescription, { color: theme.textColor || '#666' }]}>
+            <Text style={[styles.roleDescription, { color: theme.placeholderTextColor || '#666' }]}>
               Complete tasks, earn rewards
             </Text>
           </TouchableOpacity>
@@ -148,7 +148,7 @@ export default function ProfileScreen() {
           >
             <Text style={[styles.roleIcon]}>👑</Text>
             <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Dom</Text>
-            <Text style={[styles.roleDescription, { color: theme.textColor || '#666' }]}>
+            <Text style={[styles.roleDescription, { color: theme.placeholderTextColor || '#666' }]}>
               Assign tasks, manage rewards
             </Text>
           </TouchableOpacity>
