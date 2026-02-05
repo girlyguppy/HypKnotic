@@ -71,7 +71,7 @@ export const HistoryProvider = ({ children }) => {
   // Add a new history entry
   const addHistoryEntry = useCallback((type, details = {}) => {
     const entry = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 11),
       type,
       label: typeLabels[type] || type,
       category: getHistoryCategory(type),
