@@ -256,6 +256,39 @@ npx expo start --web --clear
 13. Add Gun.js sync service and architecture docs
 14. Implement multi-partner architecture
 15. Add data wipe button to Developer tab
+16. Simplify SetupScreen - remove global roles, add per-relationship role selection
+17. Add ModeSwitcher component for relationship/mode switching
+18. Update RelationshipContext with currentMode, toggleMode, and activeRelationship
+19. Integrate ModeSwitcher into App.js header
+
+---
+
+## 🏗️ Current Architecture
+
+### Role System
+**NO GLOBAL ROLES!** Each relationship has its own role.
+
+| Mode | Description |
+|------|-------------|
+| Solo | You are both Dom and Sub to yourself - toggle between modes |
+| Dom to Partner | You create tasks/rewards for them |
+| Sub to Partner | You complete tasks they assign |
+| Switch with Partner | Toggle between Dom and Sub views |
+
+### Key Components
+- `SetupScreen` - First-run: Solo vs Partner choice (role selected when pairing)
+- `ModeSwitcher` - Header component for switching relationships and modes
+- `RelationshipContext` - Manages relationships, currentMode, and permissions
+
+### Data Flow
+```
+RelationshipContext
+├── relationships[] - All relationships
+├── activeRelationship - Currently selected
+├── currentMode - 'dom' or 'sub' (for Solo/Switch)
+├── toggleMode() - Switch between dom/sub
+└── canPerformAction() - Check permissions based on role + mode
+```
 
 ---
 
