@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 import { themes, createCustomTheme } from '../styles/ThemeSystem';
@@ -69,9 +70,17 @@ export default function ThemesScreen() {
             ]} 
             onPress={() => handleSelectTheme(themeOption)}
           >
-            <Text style={[styles.buttonText, { color: themeOption.colors.textOnPrimary }]}>
-              {themeOption.name}
-            </Text>
+            <View style={styles.themeButtonContent}>
+              <Ionicons 
+                name={themeOption.icon || 'color-palette'} 
+                size={20} 
+                color={themeOption.colors.textOnPrimary} 
+                style={styles.themeIcon}
+              />
+              <Text style={[styles.buttonText, { color: themeOption.colors.textOnPrimary }]}>
+                {themeOption.name}
+              </Text>
+            </View>
             {themeOption.isDark && (
               <Text style={[styles.darkLabel, { color: themeOption.colors.textOnPrimary }]}>🌙</Text>
             )}
@@ -166,6 +175,14 @@ const styles = StyleSheet.create({
     width: '47%',
     minHeight: 50,
     justifyContent: 'center',
+  },
+  themeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeIcon: {
+    marginRight: 8,
   },
   buttonText: {
     fontSize: 14,

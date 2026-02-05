@@ -57,6 +57,8 @@ export const createSemanticTheme = (config) => {
     warning = '#FFC107',
     danger = '#DC3545',
     info = '#17A2B8',
+    icon = 'color-palette', // Default icon
+    iconFamily = 'Ionicons',
   } = config;
 
   // Determine if this is a dark theme
@@ -97,6 +99,8 @@ export const createSemanticTheme = (config) => {
   return {
     name,
     isDark,
+    icon,
+    iconFamily,
     
     // Core colors
     colors: {
@@ -489,6 +493,8 @@ export const themes = {
     primary: '#9B59B6',
     background: '#F3E8FF',
     surface: '#FFFFFF',
+    icon: 'flower', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   dark: createSemanticTheme({
@@ -496,6 +502,8 @@ export const themes = {
     primary: '#BB86FC',
     background: '#121212',
     surface: '#1E1E1E',
+    icon: 'moon', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   latex: createSemanticTheme({
@@ -503,6 +511,8 @@ export const themes = {
     primary: '#E91E63',
     background: '#000000',
     surface: '#1A1A1A',
+    icon: 'diamond', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   babyBlue: createSemanticTheme({
@@ -510,6 +520,8 @@ export const themes = {
     primary: '#2196F3',
     background: '#E3F2FD',
     surface: '#FFFFFF',
+    icon: 'cloud', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   vampire: createSemanticTheme({
@@ -517,6 +529,8 @@ export const themes = {
     primary: '#B71C1C',
     background: '#1A0A0A',
     surface: '#2D1515',
+    icon: 'water', // Ionicons - blood drop style
+    iconFamily: 'Ionicons',
   }),
   
   fairy: createSemanticTheme({
@@ -524,6 +538,8 @@ export const themes = {
     primary: '#E91E63',
     background: '#FFF0F5',
     surface: '#FFFFFF',
+    icon: 'sparkles', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   barbie: createSemanticTheme({
@@ -531,6 +547,8 @@ export const themes = {
     primary: '#FF69B4',
     background: '#FFE4EC',
     surface: '#FFFFFF',
+    icon: 'heart', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   forest: createSemanticTheme({
@@ -538,6 +556,8 @@ export const themes = {
     primary: '#4CAF50',
     background: '#1B2819',
     surface: '#263324',
+    icon: 'leaf', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   ocean: createSemanticTheme({
@@ -545,6 +565,8 @@ export const themes = {
     primary: '#00BCD4',
     background: '#E0F7FA',
     surface: '#FFFFFF',
+    icon: 'fish', // Ionicons
+    iconFamily: 'Ionicons',
   }),
   
   sunset: createSemanticTheme({
@@ -552,6 +574,8 @@ export const themes = {
     primary: '#FF5722',
     background: '#FFF3E0',
     surface: '#FFFFFF',
+    icon: 'sunny', // Ionicons
+    iconFamily: 'Ionicons',
   }),
 };
 

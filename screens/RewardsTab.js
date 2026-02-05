@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal, TouchableWithoutFeedback, Platform } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
+import { useHistory, HistoryType } from '../data/HistoryContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 
 export default function RewardsTab() {
   const { rewards, addReward, removeReward, updateRewardCount, totalPoints, addPoints, subtractPoints } = useRewardsPunishments();
+  const { addHistoryEntry } = useHistory();
   const [theme] = useAtom(themeAtom);
   const [rewardName, setRewardName] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
@@ -202,6 +204,7 @@ export default function RewardsTab() {
     if (rewardName && pointsValue >= 0) {
       const newReward = { name: rewardName, description: rewardDescription, points: pointsValue, quantity: 0 };
       addReward(newReward);
+      addHistoryEntry(HistoryType.REWARD_CREATED, { name: rewardName, points: pointsValue });
       setRewardName('');
       setRewardDescription('');
       setRewardPoints('0');
@@ -220,6 +223,7 @@ export default function RewardsTab() {
     if (totalPoints >= reward.points) {
       subtractPoints(reward.points);
       updateRewardCount(reward.name, reward.quantity + 1);
+      addHistoryEntry(HistoryType.REWARD_PURCHASED, { name: reward.name, points: -reward.points });
     } else {
       if (Platform.OS === 'web') {
         window.alert('Not enough points to purchase this reward.');
@@ -230,32 +234,44 @@ export default function RewardsTab() {
   };
 
   const handleUseReward = (reward) => {
-    if (reward.points === 0 || reward.quantity > 0) {
+    // Check if user can use the reward
+    const canUse = reward.points === 0 || reward.quantity > 0;
+    
+    if (!canUse) {
+      if (Platform.OS === 'web') {
+        window.alert('You do not have any of this reward to use. Purchase it first!');
+      } else {
+        Alert.alert('Error', 'You do not have any of this reward to use. Purchase it first!');
+      }
+      return;
+    }
+
+    // Handle confirmation based on platform
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Use "${reward.name}"? This will mark the reward as used.`)) {
+        if (reward.points > 0) {
+          updateRewardCount(reward.name, reward.quantity - 1);
+        }
+        addHistoryEntry(HistoryType.REWARD_USED, { name: reward.name });
+      }
+    } else {
       Alert.alert(
         "Use Reward",
-        "Are you sure you want to use this reward?",
+        `Are you sure you want to use "${reward.name}"?`,
         [
-          {
-            text: "Cancel",
-            style: "cancel"
-          },
+          { text: "Cancel", style: "cancel" },
           {
             text: "Use",
             onPress: () => {
               if (reward.points > 0) {
                 updateRewardCount(reward.name, reward.quantity - 1);
               }
+              addHistoryEntry(HistoryType.REWARD_USED, { name: reward.name });
             },
             style: "destructive"
           }
         ]
       );
-    } else {
-      if (Platform.OS === 'web') {
-        window.alert('You do not have any of this reward to use.');
-      } else {
-        Alert.alert('Error', 'You do not have any of this reward to use.');
-      }
     }
   };
 
@@ -263,6 +279,7 @@ export default function RewardsTab() {
     if (Platform.OS === 'web') {
       if (window.confirm("Are you sure you want to delete this reward? You will need to remake it if deleted.")) {
         removeReward(reward.name);
+        addHistoryEntry(HistoryType.REWARD_DELETED, { name: reward.name });
       }
     } else {
       Alert.alert(
@@ -277,6 +294,7 @@ export default function RewardsTab() {
             text: "Delete",
             onPress: () => {
               removeReward(reward.name);
+              addHistoryEntry(HistoryType.REWARD_DELETED, { name: reward.name });
             },
             style: "destructive"
           }
@@ -288,8 +306,10 @@ export default function RewardsTab() {
   const handlePointChange = (amount) => {
     if (amount > 0) {
       addPoints(amount);
+      addHistoryEntry(HistoryType.POINTS_ADDED, { points: amount });
     } else {
       subtractPoints(Math.abs(amount));
+      addHistoryEntry(HistoryType.POINTS_SUBTRACTED, { points: amount });
     }
   };
 

@@ -240,7 +240,10 @@ export default function DeveloperTab() {
       backgroundColor: theme.isDark ? '#1A1A1A' : '#F5F5F5',
       borderRadius: 8,
       padding: 12,
-      maxHeight: 150,
+      height: 150,
+    },
+    logScrollView: {
+      flex: 1,
     },
     logText: {
       fontSize: 12,
@@ -329,13 +332,15 @@ export default function DeveloperTab() {
       <View style={dynamicStyles.section}>
         <Text style={dynamicStyles.sectionTitle}>Activity Log</Text>
         <View style={dynamicStyles.logContainer}>
-          {log.length > 0 ? (
-            log.map((entry, i) => (
-              <Text key={i} style={dynamicStyles.logText}>{entry}</Text>
-            ))
-          ) : (
-            <Text style={dynamicStyles.logText}>No activity yet...</Text>
-          )}
+          <ScrollView style={dynamicStyles.logScrollView} nestedScrollEnabled={true}>
+            {log.length > 0 ? (
+              log.map((entry, i) => (
+                <Text key={i} style={dynamicStyles.logText}>{entry}</Text>
+              ))
+            ) : (
+              <Text style={dynamicStyles.logText}>No activity yet...</Text>
+            )}
+          </ScrollView>
         </View>
       </View>
 
