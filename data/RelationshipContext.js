@@ -19,6 +19,7 @@ export function RelationshipProvider({ children }) {
   const [relationshipData, setRelationshipData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [soloMode, setSoloMode] = useState(false);
+  const [currentMode, setCurrentMode] = useState('sub'); // 'dom' or 'sub' - for switch/solo modes
 
   // Load on startup
   useEffect(() => {
@@ -256,26 +257,61 @@ export function RelationshipProvider({ children }) {
     const domActions = ['createTask', 'createReward', 'createPunishment', 'awardPoints', 'editRules'];
     const subActions = ['completeTask', 'useReward', 'requestRule', 'setLimits'];
     
-    if (rel.myRole === 'switch') return true;
+    // For switch mode, check currentMode
+    if (rel.myRole === 'switch') {
+      if (currentMode === 'dom') return domActions.includes(action);
+      if (currentMode === 'sub') return subActions.includes(action);
+      return true;
+    }
+    
     if (rel.myRole === 'dom') return domActions.includes(action);
     if (rel.myRole === 'sub') return subActions.includes(action);
     
     return false;
   }
 
+  /**
+   * Toggle between dom and sub mode (for solo or switch roles)
+   */
+  function toggleMode() {
+    setCurrentMode(prev => prev === 'dom' ? 'sub' : 'dom');
+  }
+
+  /**
+   * Set the active relationship by ID
+   */
+  async function setActiveRelationship(relId) {
+    await saveActiveRelationship(relId);
+  }
+
+  /**
+   * Get the active relationship object (for ModeSwitcher)
+   */
+  const activeRelationship = relationships[activeRelationshipId] || null;
+
+  /**
+   * Check if we're in solo mode
+   */
+  const isSoloMode = soloMode || activeRelationship?.isSolo || false;
+
   const value = {
     // State
-    relationships,
+    relationships: Object.values(relationships), // Array for easier mapping
     activeRelationshipId,
+    activeRelationship,
     relationshipData,
     isLoading,
     soloMode,
+    isSoloMode,
+    currentMode,
     
     // Actions
     enableSoloMode,
     createRelationship,
     generatePairingCode,
     switchRelationship,
+    setActiveRelationship,
+    toggleMode,
     updateRelationship,
     updateVisibility,
     getRelationshipData,
