@@ -5,18 +5,20 @@ import ColorPickerWheel from 'react-native-color-picker-wheel';
 import { themeAtom } from '../atoms/themeAtom';
 import { themes, createCustomTheme } from '../styles/ThemeSystem';
 
+// Static theme list to avoid recreating on each render
+const themeList = Object.entries(themes);
+const themeNames = themeList.map(([_, t]) => t.name);
+
 export default function ThemesScreen() {
   const [theme, setTheme] = useAtom(themeAtom);
   const [customColor, setCustomColor] = useState('#9B59B6');
   const [customDarkMode, setCustomDarkMode] = useState(false);
   const hasUserInteracted = useRef(false);
-
-  const themeList = Object.entries(themes);
   
   // Derive isCustomMode from whether current theme matches any preset
   const isCustomMode = useMemo(() => {
-    return !themeList.some(([_, t]) => t.name === theme.name);
-  }, [theme.name, themeList]);
+    return !themeNames.includes(theme.name);
+  }, [theme.name]);
 
   const handleSelectTheme = (themeOption) => {
     setTheme(themeOption);

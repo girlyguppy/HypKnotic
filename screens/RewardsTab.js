@@ -15,10 +15,15 @@ export default function RewardsTab() {
 
   // Create dynamic styles based on theme
   const dynamicStyles = useMemo(() => ({
-    container: {
+    scrollView: {
       flex: 1,
       backgroundColor: theme.colors?.background || '#F3E8FF',
+    },
+    container: {
+      flexGrow: 1,
+      backgroundColor: theme.colors?.background || '#F3E8FF',
       padding: 16,
+      paddingBottom: 40,
     },
     title: {
       fontSize: 24,
@@ -311,7 +316,7 @@ export default function RewardsTab() {
   };
 
   return (
-    <ScrollView contentContainerStyle={dynamicStyles.container}>
+    <ScrollView style={dynamicStyles.scrollView} contentContainerStyle={dynamicStyles.container}>
       <Text style={dynamicStyles.title}>Rewards</Text>
       <Text style={dynamicStyles.totalPoints}>Total Points: {totalPoints}</Text>
 
