@@ -6,6 +6,8 @@ import { RewardsPunishmentsProvider } from './data/RewardsPunishmentsContext';
 import { HabitsProvider } from './data/HabitsContext';
 import { ProfileProvider } from './data/ProfileContext';
 import { HistoryProvider } from './data/HistoryContext';
+import { AuthProvider, useAuth } from './data/AuthContext';
+import { RelationshipProvider, useRelationships } from './data/RelationshipContext';
 import RewardsTab from './screens/RewardsTab';
 import PunishmentsTab from './screens/PunishmentsTab';
 import HabitsTab from './screens/HabitsTab';
@@ -17,10 +19,13 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import DeveloperTab from './screens/DeveloperTab';
+import SetupScreen from './screens/SetupScreen';
+import LoginScreen from './screens/LoginScreen';
+import PartnerManagementScreen from './screens/PartnerManagementScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Provider, useAtom } from 'jotai';
 import { themeAtom } from './atoms/themeAtom';
-import { TouchableOpacity, View, Text } from 'react-native';
+import { TouchableOpacity, View, Text, ActivityIndicator } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -65,6 +70,9 @@ function CustomDrawerContent(props) {
 
 function MainTabs({ isDeveloperMode }) {
   const [theme] = useAtom(themeAtom);
+  const { getActiveRelationship, canPerformAction } = useRelationships();
+  const activeRel = getActiveRelationship();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route, navigation }) => ({
@@ -103,8 +111,34 @@ function MainTabs({ isDeveloperMode }) {
             <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
           </TouchableOpacity>
         ),
+        headerRight: () => activeRel && !activeRel.isSolo ? (
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            marginRight: 15,
+            backgroundColor: theme?.colors?.primary + '20',
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 12,
+          }}>
+            <MaterialCommunityIcons 
+              name={activeRel.myRole === 'dom' ? 'shield' : (activeRel.myRole === 'sub' ? 'heart' : 'swap-horizontal')} 
+              size={16} 
+              color={theme?.colors?.primary || '#9C27B0'} 
+            />
+            <Text style={{ 
+              marginLeft: 4, 
+              color: theme?.colors?.primary || '#9C27B0',
+              fontSize: 12,
+              fontWeight: '600',
+            }}>
+              {activeRel.partnerName}
+            </Text>
+          </View>
+        ) : null,
         headerTitleAlign: 'center',
       })}
+    >
     >
       <Tab.Screen name="Rewards" component={RewardsTab} />
       <Tab.Screen name="Punishments" component={PunishmentsTab} />
@@ -116,54 +150,98 @@ function MainTabs({ isDeveloperMode }) {
   );
 }
 
-export default function App() {
+// Main app with auth and setup flow
+function AppContent() {
   const [theme] = useAtom(themeAtom);
+  const { isAuthenticated, isLoading: authLoading, needsSetup, skipAuth } = useAuth();
+  const { isLoading: relLoading, soloMode, enableSoloMode } = useRelationships();
   const [isDeveloperMode, setIsDeveloperMode] = useState(true); // Dev mode ON by default
+  const [setupComplete, setSetupComplete] = useState(false);
+
+  // Show loading screen while checking auth state
+  if (authLoading || relLoading) {
+    return (
+      <View style={{ 
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: theme?.colors?.background || '#1A1A2E',
+      }}>
+        <ActivityIndicator size="large" color={theme?.colors?.primary || '#9C27B0'} />
+        <Text style={{ color: theme?.colors?.text || '#fff', marginTop: 16 }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show setup screen for new users
+  if (needsSetup && !setupComplete) {
+    return (
+      <SetupScreen 
+        onComplete={() => setSetupComplete(true)} 
+      />
+    );
+  }
+
+  // Show login screen if not authenticated (but has account)
+  if (!isAuthenticated && !needsSetup) {
+    return <LoginScreen />;
+  }
 
   return (
+    <NavigationContainer>
+      <Drawer.Navigator
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        screenOptions={({ navigation }) => ({
+          drawerStyle: {
+            backgroundColor: theme?.colors?.drawer || theme?.colors?.background || '#FFFFFF',
+          },
+          headerStyle: {
+            backgroundColor: theme?.colors?.surface || '#FFFFFF',
+          },
+          headerTintColor: theme?.colors?.text || '#000000',
+          headerTitleStyle: {
+            color: theme?.colors?.text || '#000000',
+          },
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
+            </TouchableOpacity>
+          ),
+          headerTitleAlign: 'center',
+        })}
+      >
+        <Drawer.Screen name="MainTabs" options={{ headerShown: false }}>
+          {(props) => <MainTabs {...props} isDeveloperMode={isDeveloperMode} />}
+        </Drawer.Screen>
+        <Drawer.Screen name="Profile" component={ProfileScreen} />
+        <Drawer.Screen name="Partners" component={PartnerManagementScreen} />
+        <Drawer.Screen name="Themes" component={ThemesScreen} />
+        <Drawer.Screen name="Notifications" component={NotificationsScreen} />
+        <Drawer.Screen name="History" component={HistoryScreen} />
+        <Drawer.Screen name="Settings">
+          {(props) => <SettingsScreen {...props} isDeveloperMode={isDeveloperMode} setIsDeveloperMode={setIsDeveloperMode} />}
+        </Drawer.Screen>
+      </Drawer.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
     <Provider>
-      <ProfileProvider>
-        <HistoryProvider>
-          <RewardsPunishmentsProvider>
-            <HabitsProvider>
-              <NavigationContainer>
-                <Drawer.Navigator
-                  drawerContent={(props) => <CustomDrawerContent {...props} />}
-                  screenOptions={({ navigation }) => ({
-                    drawerStyle: {
-                      backgroundColor: theme?.colors?.drawer || theme?.colors?.background || '#FFFFFF',
-                    },
-                    headerStyle: {
-                      backgroundColor: theme?.colors?.surface || '#FFFFFF',
-                    },
-                    headerTintColor: theme?.colors?.text || '#000000',
-                    headerTitleStyle: {
-                      color: theme?.colors?.text || '#000000',
-                    },
-                    headerLeft: () => (
-                      <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                        <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
-                      </TouchableOpacity>
-                    ),
-                    headerTitleAlign: 'center',
-                  })}
-                >
-                  <Drawer.Screen name="MainTabs" options={{ headerShown: false }}>
-                    {(props) => <MainTabs {...props} isDeveloperMode={isDeveloperMode} />}
-                  </Drawer.Screen>
-                  <Drawer.Screen name="Profile" component={ProfileScreen} />
-                  <Drawer.Screen name="Themes" component={ThemesScreen} />
-                  <Drawer.Screen name="Notifications" component={NotificationsScreen} />
-                  <Drawer.Screen name="History" component={HistoryScreen} />
-                  <Drawer.Screen name="Settings">
-                    {(props) => <SettingsScreen {...props} isDeveloperMode={isDeveloperMode} setIsDeveloperMode={setIsDeveloperMode} />}
-                  </Drawer.Screen>
-                </Drawer.Navigator>
-              </NavigationContainer>
-            </HabitsProvider>
-          </RewardsPunishmentsProvider>
-        </HistoryProvider>
-      </ProfileProvider>
+      <AuthProvider>
+        <RelationshipProvider>
+          <ProfileProvider>
+            <HistoryProvider>
+              <RewardsPunishmentsProvider>
+                <HabitsProvider>
+                  <AppContent />
+                </HabitsProvider>
+              </RewardsPunishmentsProvider>
+            </HistoryProvider>
+          </ProfileProvider>
+        </RelationshipProvider>
+      </AuthProvider>
     </Provider>
   );
 }
