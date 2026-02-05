@@ -119,9 +119,10 @@ export default function DeveloperTab() {
       return;
     }
 
+    const currentTasks = tasks || [];
     let added = 0;
     [...SAMPLE_TASKS, ...SAMPLE_BAD_HABITS].forEach(template => {
-      if (!tasks?.find(t => t.name === template.name)) {
+      if (!currentTasks.find(t => t.name === template.name)) {
         const dueDate = new Date();
         dueDate.setHours(dueDate.getHours() + Math.floor(Math.random() * 24) + 1);
         
@@ -163,7 +164,14 @@ export default function DeveloperTab() {
   const handleQuickSetup = () => {
     handleAddSampleRewards();
     handleAddSamplePunishments();
-    setTimeout(() => handleAddSampleTasks(), 100);
+    // Use slightly longer delay to ensure state updates have propagated
+    setTimeout(() => {
+      if (rewards.length > 0 && punishments.length > 0) {
+        handleAddSampleTasks();
+      } else {
+        addLog('⚠️ Please run Quick Setup again to add tasks');
+      }
+    }, 200);
     handleAddPoints(100);
     addLog('🚀 Quick setup complete!');
   };

@@ -124,7 +124,6 @@ export default function RewardsTab() {
       justifyContent: 'space-between',
       alignItems: 'center',
       marginTop: 12,
-      gap: 8,
     },
     purchaseButton: {
       backgroundColor: theme.colors?.primary || '#9B59B6',
@@ -132,6 +131,7 @@ export default function RewardsTab() {
       borderRadius: 8,
       alignItems: 'center',
       flex: 1,
+      marginRight: 4,
     },
     purchaseButtonText: {
       color: theme.colors?.textOnPrimary || '#FFFFFF',
@@ -144,6 +144,7 @@ export default function RewardsTab() {
       borderRadius: 8,
       alignItems: 'center',
       flex: 1,
+      marginHorizontal: 4,
     },
     useButtonText: {
       color: theme.colors?.infoText || '#FFFFFF',
@@ -156,6 +157,7 @@ export default function RewardsTab() {
       borderRadius: 8,
       alignItems: 'center',
       flex: 1,
+      marginLeft: 4,
     },
     deleteButtonText: {
       color: theme.colors?.dangerText || '#FFFFFF',
@@ -347,7 +349,7 @@ export default function RewardsTab() {
                   value={rewardPoints}
                   onChangeText={(text) => { 
                     const numericText = text.replace(/[^0-9]/g, '');
-                    setRewardPoints(numericText); 
+                    setRewardPoints(numericText || '0'); // Default to '0' if empty
                     setHasChanges(true); 
                   }}
                 />
