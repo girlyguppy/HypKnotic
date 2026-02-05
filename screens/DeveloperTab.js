@@ -1,153 +1,337 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 import { useHabits } from '../data/HabitsContext';
 
-// All possible combinations to test
-const TEST_CONFIGS = {
-  task: ['progress', 'completion'],
-  badHabit: ['slipup', 'threshold']
-};
+// Realistic sample data fitting the app's theme
+const SAMPLE_REWARDS = [
+  { name: 'Extra Screen Time', description: '30 minutes of uninterrupted screen time', points: 50 },
+  { name: 'Sleep In', description: 'Permission to sleep in an extra hour', points: 75 },
+  { name: 'Choose Dinner', description: 'Pick what to have for dinner tonight', points: 40 },
+  { name: 'Massage', description: 'A relaxing 15-minute massage', points: 100 },
+  { name: 'Movie Night Pick', description: 'Choose the movie for movie night', points: 30 },
+  { name: 'Day Off Chores', description: 'Skip assigned chores for one day', points: 150 },
+  { name: 'Special Treat', description: 'Get a favorite snack or dessert', points: 25 },
+  { name: 'Free Pass', description: 'Skip one assigned task without penalty', points: 200 },
+];
 
-const RECURRENCES = ['none', 'daily', 'weekly', 'monthly'];
-const DAYS = ['Monday', 'Wednesday', 'Friday']; // Sample days for weekly
+const SAMPLE_PUNISHMENTS = [
+  { name: 'Early Bedtime', description: 'Go to bed 30 minutes early', count: 0 },
+  { name: 'Extra Chores', description: 'Complete one additional household task', count: 0 },
+  { name: 'No Sweets', description: 'No desserts or sweets for the day', count: 0 },
+  { name: 'Writing Lines', description: 'Write an affirmation 25 times', count: 0 },
+  { name: 'Screen Time Reduction', description: 'Reduce screen time by 1 hour today', count: 0 },
+  { name: 'Corner Time', description: '10 minutes of quiet reflection time', count: 0 },
+];
+
+const SAMPLE_TASKS = [
+  { 
+    name: 'Morning Routine', 
+    description: 'Complete full morning routine by 9 AM',
+    mode: 'task',
+    rewardCondition: 'completion',
+    requiredCompletion: 1,
+  },
+  { 
+    name: 'Exercise Session', 
+    description: 'Complete a 30-minute workout',
+    mode: 'task',
+    rewardCondition: 'completion',
+    requiredCompletion: 1,
+  },
+  { 
+    name: 'Drink Water', 
+    description: 'Drink 8 glasses of water today',
+    mode: 'task',
+    rewardCondition: 'progress',
+    requiredCompletion: 8,
+  },
+  { 
+    name: 'Study/Practice', 
+    description: 'Complete study or practice sessions',
+    mode: 'task',
+    rewardCondition: 'progress',
+    requiredCompletion: 3,
+  },
+];
+
+const SAMPLE_BAD_HABITS = [
+  { 
+    name: 'Nail Biting', 
+    description: 'Avoid biting nails',
+    mode: 'badHabit',
+    punishmentCondition: 'threshold',
+    maxSlipups: 3,
+  },
+  { 
+    name: 'Swearing', 
+    description: 'Avoid using inappropriate language',
+    mode: 'badHabit',
+    punishmentCondition: 'slipup',
+    maxSlipups: 5,
+  },
+  { 
+    name: 'Late Night Snacking', 
+    description: 'No eating after 9 PM',
+    mode: 'badHabit',
+    punishmentCondition: 'threshold',
+    maxSlipups: 2,
+  },
+];
 
 export default function DeveloperTab() {
   const [theme] = useAtom(themeAtom);
-  const { rewards, punishments, addReward, addPunishment } = useRewardsPunishments();
-  const { addTask } = useHabits();
-  const [rewardCounter, setRewardCounter] = useState(1);
-  const [punishmentCounter, setPunishmentCounter] = useState(1);
-  const [habitCounter, setHabitCounter] = useState(1);
-  const [testedCombos, setTestedCombos] = useState([]);
+  const { rewards, punishments, addReward, addPunishment, addPoints } = useRewardsPunishments();
+  const { addTask, tasks } = useHabits();
+  const [log, setLog] = useState([]);
 
-  const getNextUntested = () => {
-    const allCombos = [];
-    Object.entries(TEST_CONFIGS).forEach(([mode, conditions]) => {
-      conditions.forEach(condition => {
-        allCombos.push(`${mode}-${condition}`);
-      });
-    });
-    
-    return allCombos.find(combo => !testedCombos.includes(combo)) || allCombos[0];
+  const addLog = (message) => {
+    setLog(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 9)]);
   };
 
-  const handleAddExampleReward = () => {
-    const points = Math.max(0, rewardCounter - 2);
-    addReward({
-      name: `Test Reward ${rewardCounter}`,
-      description: 'Test reward',
-      points,
-      quantity: 0
+  const handleAddSampleRewards = () => {
+    let added = 0;
+    SAMPLE_REWARDS.forEach(reward => {
+      if (!rewards.find(r => r.name === reward.name)) {
+        addReward({ ...reward, quantity: 0 });
+        added++;
+      }
     });
-    setRewardCounter(prev => prev + 1);
+    addLog(`Added ${added} sample rewards`);
   };
 
-  const handleAddExamplePunishment = () => {
-    addPunishment({
-      name: `Test Punishment ${punishmentCounter}`,
-      description: 'Test punishment',
-      count: 0
+  const handleAddSamplePunishments = () => {
+    let added = 0;
+    SAMPLE_PUNISHMENTS.forEach(punishment => {
+      if (!punishments.find(p => p.name === punishment.name)) {
+        addPunishment(punishment);
+        added++;
+      }
     });
-    setPunishmentCounter(prev => prev + 1);
+    addLog(`Added ${added} sample punishments`);
   };
 
-  const handleAddExampleHabit = () => {
+  const handleAddSampleTasks = () => {
     if (rewards.length === 0 || punishments.length === 0) {
-      alert('Please add some rewards and punishments first');
+      addLog('⚠️ Add rewards and punishments first!');
       return;
     }
 
-    // Get next untested combination
-    const nextCombo = getNextUntested();
-    const [mode, condition] = nextCombo.split('-');
+    let added = 0;
+    [...SAMPLE_TASKS, ...SAMPLE_BAD_HABITS].forEach(template => {
+      if (!tasks?.find(t => t.name === template.name)) {
+        const dueDate = new Date();
+        dueDate.setHours(dueDate.getHours() + Math.floor(Math.random() * 24) + 1);
+        
+        // Pick random rewards/punishments
+        const selectedRewards = rewards
+          .slice(0, 2)
+          .map(r => ({ name: r.name, quantity: 1 }));
+        
+        const selectedPunishments = punishments
+          .slice(0, 2)
+          .map(p => ({ name: p.name, quantity: 1 }));
 
-    // Generate random values
-    const recurrence = RECURRENCES[Math.floor(Math.random() * RECURRENCES.length)];
-    const dueDate = new Date();
-    dueDate.setMinutes(dueDate.getMinutes() + Math.floor(Math.random() * 10));
-    
-    // Select random rewards/punishments
-    const selectedRewards = rewards
-      .filter(r => r.points > 0) // Non-free rewards only
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 2)
-      .map(r => ({ name: r.name, quantity: Math.floor(Math.random() * 3) + 1 }));
+        addTask({
+          ...template,
+          rewards: selectedRewards,
+          punishments: selectedPunishments,
+          successPoints: Math.floor(Math.random() * 20) + 10,
+          failurePoints: Math.floor(Math.random() * 15) + 5,
+          recurrence: 'daily',
+          selectedDays: [],
+          dueDate,
+          dueTime: dueDate,
+          progress: 0,
+          slipups: 0,
+          isCompleted: false,
+          hasFailed: false,
+        });
+        added++;
+      }
+    });
+    addLog(`Added ${added} sample tasks/habits`);
+  };
 
-    const selectedPunishments = punishments
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 2)
-      .map(p => ({ name: p.name, quantity: Math.floor(Math.random() * 3) + 1 }));
+  const handleAddPoints = (amount) => {
+    addPoints(amount);
+    addLog(`Added ${amount} points`);
+  };
 
-    const newHabit = {
-      name: `Test ${condition} ${mode} ${habitCounter}`,
-      description: `Auto-generated test habit`,
-      mode,
-      rewardCondition: mode === 'task' ? condition : 'none',
-      punishmentCondition: mode === 'badHabit' ? condition : 'none',
-      requiredCompletion: Math.floor(Math.random() * 5) + 1,
-      maxSlipups: Math.floor(Math.random() * 5) + 1,
-      rewards: selectedRewards,
-      punishments: selectedPunishments,
-      progressPoints: Math.floor(Math.random() * 10),
-      completionPoints: Math.floor(Math.random() * 10),
-      slipupPoints: Math.floor(Math.random() * 10),
-      failurePoints: Math.floor(Math.random() * 10),
-      recurrence,
-      selectedDays: recurrence === 'weekly' ? DAYS : [],
-      dueDate,
-      dueTime: dueDate,
-      progress: 0,
-      slipups: 0,
-      isCompleted: false
-    };
+  const handleQuickSetup = () => {
+    handleAddSampleRewards();
+    handleAddSamplePunishments();
+    setTimeout(() => handleAddSampleTasks(), 100);
+    handleAddPoints(100);
+    addLog('🚀 Quick setup complete!');
+  };
 
-    addTask(newHabit);
-    setHabitCounter(prev => prev + 1);
-    setTestedCombos(prev => [...prev, nextCombo]);
+  // Dynamic styles
+  const dynamicStyles = {
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors?.background || '#F3E8FF',
+      padding: 16,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: theme.colors?.text || '#1A1A1A',
+      marginBottom: 16,
+    },
+    section: {
+      backgroundColor: theme.colors?.surface || '#FFFFFF',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.colors?.text || '#1A1A1A',
+      marginBottom: 12,
+    },
+    button: {
+      backgroundColor: theme.colors?.primary || '#9B59B6',
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginVertical: 4,
+    },
+    buttonText: {
+      color: theme.colors?.textOnPrimary || '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    quickButton: {
+      backgroundColor: theme.colors?.success || '#28A745',
+      padding: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    quickButtonText: {
+      color: theme.colors?.successText || '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    pointsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    pointButton: {
+      backgroundColor: theme.colors?.info || '#17A2B8',
+      padding: 12,
+      borderRadius: 8,
+      minWidth: 80,
+      alignItems: 'center',
+    },
+    logContainer: {
+      backgroundColor: theme.isDark ? '#1A1A1A' : '#F5F5F5',
+      borderRadius: 8,
+      padding: 12,
+      maxHeight: 150,
+    },
+    logText: {
+      fontSize: 12,
+      color: theme.colors?.textSecondary || '#666666',
+      fontFamily: 'monospace',
+      marginBottom: 4,
+    },
+    stats: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 12,
+    },
+    stat: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: theme.colors?.primary || '#9B59B6',
+    },
+    statLabel: {
+      fontSize: 12,
+      color: theme.colors?.textSecondary || '#666666',
+    },
   };
 
   return (
-    <View style={theme.container}>
-      <Text style={theme.title}>Developer Tools</Text>
+    <ScrollView style={dynamicStyles.container}>
+      <Text style={dynamicStyles.title}>🛠️ Developer Tools</Text>
       
-      <View style={styles.buttonContainer}>
-        <Button 
-          title="Add Example Reward" 
-          onPress={handleAddExampleReward}
-        />
-        <Button 
-          title="Add Example Punishment" 
-          onPress={handleAddExamplePunishment}
-        />
-        <Button 
-          title="Add Example Habit" 
-          onPress={handleAddExampleHabit}
-        />
+      {/* Quick Setup */}
+      <TouchableOpacity style={dynamicStyles.quickButton} onPress={handleQuickSetup}>
+        <Text style={dynamicStyles.quickButtonText}>🚀 Quick Setup (Add All Sample Data)</Text>
+      </TouchableOpacity>
+
+      {/* Stats */}
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Current Data</Text>
+        <View style={dynamicStyles.stats}>
+          <View style={dynamicStyles.stat}>
+            <Text style={dynamicStyles.statValue}>{rewards.length}</Text>
+            <Text style={dynamicStyles.statLabel}>Rewards</Text>
+          </View>
+          <View style={dynamicStyles.stat}>
+            <Text style={dynamicStyles.statValue}>{punishments.length}</Text>
+            <Text style={dynamicStyles.statLabel}>Punishments</Text>
+          </View>
+          <View style={dynamicStyles.stat}>
+            <Text style={dynamicStyles.statValue}>{tasks?.length || 0}</Text>
+            <Text style={dynamicStyles.statLabel}>Tasks</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.counterInfo}>
-        <Text>Reward Counter: {rewardCounter}</Text>
-        <Text>Punishment Counter: {punishmentCounter}</Text>
-        <Text>Habit Counter: {habitCounter}</Text>
-        <Text>Combinations Tested: {testedCombos.length}/4</Text>
-        <Text>Next: {getNextUntested()}</Text>
+      {/* Individual Actions */}
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Add Sample Data</Text>
+        <TouchableOpacity style={dynamicStyles.button} onPress={handleAddSampleRewards}>
+          <Text style={dynamicStyles.buttonText}>Add Sample Rewards</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={dynamicStyles.button} onPress={handleAddSamplePunishments}>
+          <Text style={dynamicStyles.buttonText}>Add Sample Punishments</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={dynamicStyles.button} onPress={handleAddSampleTasks}>
+          <Text style={dynamicStyles.buttonText}>Add Sample Tasks & Habits</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+
+      {/* Points Management */}
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Quick Points</Text>
+        <View style={dynamicStyles.pointsRow}>
+          <TouchableOpacity style={dynamicStyles.pointButton} onPress={() => handleAddPoints(10)}>
+            <Text style={dynamicStyles.buttonText}>+10</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={dynamicStyles.pointButton} onPress={() => handleAddPoints(50)}>
+            <Text style={dynamicStyles.buttonText}>+50</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={dynamicStyles.pointButton} onPress={() => handleAddPoints(100)}>
+            <Text style={dynamicStyles.buttonText}>+100</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Activity Log */}
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Activity Log</Text>
+        <View style={dynamicStyles.logContainer}>
+          {log.length > 0 ? (
+            log.map((entry, i) => (
+              <Text key={i} style={dynamicStyles.logText}>{entry}</Text>
+            ))
+          ) : (
+            <Text style={dynamicStyles.logText}>No activity yet...</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={{ height: 50 }} />
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  buttonContainer: {
-    gap: 10,
-    marginVertical: 20,
-  },
-  counterInfo: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-  }
-});

@@ -1,70 +1,158 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useAtom } from 'jotai';
 import ColorPickerWheel from 'react-native-color-picker-wheel';
 import { themeAtom } from '../atoms/themeAtom';
-import { lavenderTheme, darkTheme, LatexTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme, generateCustomTheme } from '../styles/Themes';
+import { themes, createCustomTheme } from '../styles/ThemeSystem';
 
 export default function ThemesScreen() {
   const [theme, setTheme] = useAtom(themeAtom);
-  const [customColor, setCustomColor] = useState('#FFFFFF');
+  const [customColor, setCustomColor] = useState('#9B59B6');
+  const [customDarkMode, setCustomDarkMode] = useState(false);
+
+  const themeList = Object.entries(themes);
 
   return (
-    <View style={theme.container}>
-      <Text style={theme.title}>Select Theme</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors?.background || '#F3E8FF' }]}>
+      <Text style={[styles.title, { color: theme.colors?.text || '#1A1A1A' }]}>Select Theme</Text>
+      
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, { backgroundColor: lavenderTheme.button.backgroundColor }]} onPress={() => setTheme(lavenderTheme)}>
-          <Text style={[styles.buttonText, { color: lavenderTheme.buttonText.color }]}>Lavender</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: darkTheme.button.backgroundColor }]} onPress={() => setTheme(darkTheme)}>
-          <Text style={[styles.buttonText, { color: darkTheme.buttonText.color }]}>Dark</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: LatexTheme.button.backgroundColor }]} onPress={() => setTheme(LatexTheme)}>
-          <Text style={[styles.buttonText, { color: LatexTheme.buttonText.color }]}>Latex</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: babyBlueTheme.button.backgroundColor }]} onPress={() => setTheme(babyBlueTheme)}>
-          <Text style={[styles.buttonText, { color: babyBlueTheme.buttonText.color }]}>Baby Blue</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: vampireTheme.button.backgroundColor }]} onPress={() => setTheme(vampireTheme)}>
-          <Text style={[styles.buttonText, { color: vampireTheme.buttonText.color }]}>Vampire</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: fairyTheme.button.backgroundColor }]} onPress={() => setTheme(fairyTheme)}>
-          <Text style={[styles.buttonText, { color: fairyTheme.buttonText.color }]}>Fairy</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: barbieTheme.button.backgroundColor }]} onPress={() => setTheme(barbieTheme)}>
-          <Text style={[styles.buttonText, { color: barbieTheme.buttonText.color }]}>Barbie</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, { backgroundColor: forestTheme.button.backgroundColor }]} onPress={() => setTheme(forestTheme)}>
-          <Text style={[styles.buttonText, { color: forestTheme.buttonText.color }]}>Forest</Text>
-        </TouchableOpacity>
+        {themeList.map(([key, themeOption]) => (
+          <TouchableOpacity 
+            key={key}
+            style={[
+              styles.themeButton, 
+              { 
+                backgroundColor: themeOption.colors.primary,
+                borderWidth: theme.name === themeOption.name ? 3 : 0,
+                borderColor: theme.colors?.text || '#000',
+              }
+            ]} 
+            onPress={() => setTheme(themeOption)}
+          >
+            <Text style={[styles.buttonText, { color: themeOption.colors.textOnPrimary }]}>
+              {themeOption.name}
+            </Text>
+            {themeOption.isDark && (
+              <Text style={[styles.darkLabel, { color: themeOption.colors.textOnPrimary }]}>🌙</Text>
+            )}
+          </TouchableOpacity>
+        ))}
       </View>
-      <Text style={theme.title}>Custom Color Theme</Text>
-      <ColorPickerWheel
-        initialColor={customColor}
-        onColorChangeComplete={(color) => {
-          setCustomColor(color);
-          setTheme(generateCustomTheme(color));
-        }}
-        style={{ flex: 1 }}
-      />
-    </View>
+
+      <View style={[styles.section, { backgroundColor: theme.colors?.surface || '#FFF' }]}>
+        <Text style={[styles.sectionTitle, { color: theme.colors?.text || '#1A1A1A' }]}>
+          Custom Theme
+        </Text>
+        
+        <View style={styles.darkModeRow}>
+          <Text style={{ color: theme.colors?.text || '#1A1A1A' }}>Dark Mode</Text>
+          <Switch 
+            value={customDarkMode} 
+            onValueChange={(value) => {
+              setCustomDarkMode(value);
+              setTheme(createCustomTheme(customColor, value));
+            }}
+          />
+        </View>
+        
+        <ColorPickerWheel
+          initialColor={customColor}
+          onColorChangeComplete={(color) => {
+            setCustomColor(color);
+            setTheme(createCustomTheme(color, customDarkMode));
+          }}
+          style={styles.colorPicker}
+        />
+      </View>
+
+      <View style={styles.previewSection}>
+        <Text style={[styles.sectionTitle, { color: theme.colors?.text || '#1A1A1A' }]}>
+          Preview
+        </Text>
+        <View style={[styles.previewCard, { backgroundColor: theme.colors?.surface || '#FFF' }]}>
+          <Text style={{ color: theme.colors?.text, marginBottom: 8 }}>Text on surface</Text>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.primary }]}>
+            <Text style={{ color: theme.colors?.textOnPrimary }}>Primary Button</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.success }]}>
+            <Text style={{ color: theme.colors?.successText }}>Success Button</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.danger }]}>
+            <Text style={{ color: theme.colors?.dangerText }}>Danger Button</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={{ height: 50 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   buttonContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
-  button: {
-    padding: 10,
-    margin: 10,
-    borderRadius: 5,
+  themeButton: {
+    padding: 12,
+    margin: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    width: '40%',
+    width: '47%',
+    minHeight: 50,
+    justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  darkLabel: {
+    fontSize: 10,
+    marginTop: 2,
+  },
+  section: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  darkModeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  colorPicker: {
+    height: 200,
+  },
+  previewSection: {
+    marginTop: 8,
+  },
+  previewCard: {
+    borderRadius: 12,
+    padding: 16,
+  },
+  previewButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
   },
 });

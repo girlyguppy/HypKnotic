@@ -28,17 +28,19 @@ function CustomDrawerContent(props) {
   const [theme] = useAtom(themeAtom);
   
   const drawerStyle = {
-    backgroundColor: theme?.drawer?.backgroundColor || '#FFFFFF',
+    backgroundColor: theme?.colors?.drawer || theme?.colors?.background || '#FFFFFF',
   };
   
   const labelStyle = {
-    color: theme?.drawer?.textColor || '#000000',
+    color: theme?.colors?.drawerText || theme?.colors?.text || '#000000',
   };
   
   const itemStyle = (focused) => ({
     backgroundColor: focused 
-      ? theme?.activeTabButton?.backgroundColor || '#E0E0E0'
-      : theme?.tabButton?.backgroundColor || '#FFFFFF',
+      ? theme?.colors?.primary || '#E0E0E0'
+      : 'transparent',
+    borderRadius: 8,
+    marginVertical: 2,
   });
 
   return (
@@ -51,7 +53,7 @@ function CustomDrawerContent(props) {
             label={route.name}
             focused={focused}
             onPress={() => props.navigation.navigate(route.name)}
-            labelStyle={labelStyle}
+            labelStyle={[labelStyle, focused && { color: theme?.colors?.textOnPrimary || '#FFFFFF' }]}
             style={itemStyle(focused)}
           />
         );
@@ -82,18 +84,22 @@ function MainTabs({ isDeveloperMode }) {
           }
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme?.activeTabButton?.backgroundColor || '#000000',
-        tabBarInactiveTintColor: theme?.tabButton?.backgroundColor || '#888888',
-        headerStyle: {
-          backgroundColor: theme?.header?.backgroundColor || '#FFFFFF',
+        tabBarActiveTintColor: theme?.colors?.primary || '#9B59B6',
+        tabBarInactiveTintColor: theme?.colors?.textMuted || '#888888',
+        tabBarStyle: {
+          backgroundColor: theme?.colors?.surface || '#FFFFFF',
+          borderTopColor: theme?.colors?.border || '#DDDDDD',
         },
-        headerTintColor: theme?.header?.textColor || '#000000',
+        headerStyle: {
+          backgroundColor: theme?.colors?.surface || '#FFFFFF',
+        },
+        headerTintColor: theme?.colors?.text || '#000000',
         headerTitleStyle: {
-          color: theme?.header?.textColor || '#000000',
+          color: theme?.colors?.text || '#000000',
         },
         headerLeft: () => (
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <MaterialCommunityIcons name="menu" size={25} color={theme?.header?.iconColor || '#000000'} style={{ marginLeft: 15 }} />
+            <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
           </TouchableOpacity>
         ),
         headerTitleAlign: 'center',
@@ -111,7 +117,7 @@ function MainTabs({ isDeveloperMode }) {
 
 export default function App() {
   const [theme] = useAtom(themeAtom);
-  const [isDeveloperMode, setIsDeveloperMode] = useState(false);
+  const [isDeveloperMode, setIsDeveloperMode] = useState(true); // Dev mode ON by default
 
   return (
     <Provider>
@@ -122,16 +128,19 @@ export default function App() {
               <Drawer.Navigator
                 drawerContent={(props) => <CustomDrawerContent {...props} />}
                 screenOptions={({ navigation }) => ({
-                  headerStyle: {
-                    backgroundColor: theme?.header?.backgroundColor || '#FFFFFF',
+                  drawerStyle: {
+                    backgroundColor: theme?.colors?.drawer || theme?.colors?.background || '#FFFFFF',
                   },
-                  headerTintColor: theme?.header?.textColor || '#000000',
+                  headerStyle: {
+                    backgroundColor: theme?.colors?.surface || '#FFFFFF',
+                  },
+                  headerTintColor: theme?.colors?.text || '#000000',
                   headerTitleStyle: {
-                    color: theme?.header?.textColor || '#000000',
+                    color: theme?.colors?.text || '#000000',
                   },
                   headerLeft: () => (
                     <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                      <MaterialCommunityIcons name="menu" size={25} color={theme?.header?.iconColor || '#000000'} style={{ marginLeft: 15 }} />
+                      <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
                     </TouchableOpacity>
                   ),
                   headerTitleAlign: 'center',

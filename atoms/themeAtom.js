@@ -1,15 +1,7 @@
 import { atom } from 'jotai';
-import { lavenderTheme, darkTheme, LatexTheme, babyBlueTheme, vampireTheme, fairyTheme, barbieTheme, forestTheme } from '../styles/Themes';
+import { themes } from '../styles/ThemeSystem';
 
-export const themeAtom = atom(lavenderTheme);
+// Default to lavender theme
+export const themeAtom = atom(themes.lavender);
 
-export const availableThemesAtom = atom({
-  lavender: lavenderTheme,
-  dark: darkTheme,
-  latex: LatexTheme,
-  babyBlue: babyBlueTheme,
-  vampire: vampireTheme,
-  fairy: fairyTheme,
-  barbie: barbieTheme,
-  forest: forestTheme,
-});
+export const availableThemesAtom = atom(themes);
