@@ -40,6 +40,7 @@ export default function HabitsTab() {
   const [theme] = useAtom(themeAtom);
   const [successPoints, setSuccessPoints] = useState(0);
   const [failurePoints, setFailurePoints] = useState(0);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   // Dynamic styles based on theme
   const dynamicStyles = useMemo(() => ({
@@ -382,6 +383,24 @@ export default function HabitsTab() {
 
   const handleRecurrenceChange = (type) => setRecurrence(type);
 
+  // Move task up in the list
+  const moveTaskUp = (index) => {
+    if (index > 0) {
+      const newTasks = [...tasks];
+      [newTasks[index - 1], newTasks[index]] = [newTasks[index], newTasks[index - 1]];
+      setTasks(newTasks);
+    }
+  };
+
+  // Move task down in the list
+  const moveTaskDown = (index) => {
+    if (index < tasks.length - 1) {
+      const newTasks = [...tasks];
+      [newTasks[index], newTasks[index + 1]] = [newTasks[index + 1], newTasks[index]];
+      setTasks(newTasks);
+    }
+  };
+
   const handleCompleteTask = (task) => {
     // Create a lookup map for rewards
     const rewardsMap = rewards.reduce((map, r) => {
@@ -615,11 +634,52 @@ export default function HabitsTab() {
     return () => backHandler.remove();
   }, [isModalVisible, hasChanges]);
 
-  const renderItem = ({ item }) => (
-    <View style={[
-      dynamicStyles.taskCard,
-      item.mode === 'task' ? dynamicStyles.taskModeIndicator : dynamicStyles.badHabitModeIndicator
-    ]}>
+  const renderItem = ({ item, index }) => (
+    <TouchableOpacity 
+      style={[
+        dynamicStyles.taskCard,
+        item.mode === 'task' ? dynamicStyles.taskModeIndicator : dynamicStyles.badHabitModeIndicator
+      ]}
+      onLongPress={() => setIsReorderMode(!isReorderMode)}
+      delayLongPress={500}
+    >
+      {/* Partner Attribution */}
+      {item.assignedBy && (
+        <Text style={[dynamicStyles.taskText, { fontStyle: 'italic', marginBottom: 4 }]}>
+          Assigned by: {item.assignedBy}
+        </Text>
+      )}
+      
+      {/* Reorder Controls */}
+      {isReorderMode && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10, gap: 10 }}>
+          <TouchableOpacity 
+            style={{ 
+              backgroundColor: index === 0 ? '#ccc' : '#007AFF',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 6,
+            }}
+            onPress={() => moveTaskUp(index)}
+            disabled={index === 0}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>↑ Move Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={{ 
+              backgroundColor: index === tasks.length - 1 ? '#ccc' : '#007AFF',
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 6,
+            }}
+            onPress={() => moveTaskDown(index)}
+            disabled={index === tasks.length - 1}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>↓ Move Down</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       <Text style={dynamicStyles.taskTitle}>{item.name}</Text>
       <Text style={dynamicStyles.taskText}>{item.description}</Text>
       <Text style={dynamicStyles.taskText}>Due: {item.dueDate.toLocaleDateString()} {item.dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
@@ -673,7 +733,7 @@ export default function HabitsTab() {
           <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -685,10 +745,35 @@ export default function HabitsTab() {
         <Text style={dynamicStyles.addButtonText}>+ Add Task</Text>
       </TouchableOpacity>
 
+      {/* Reorder Mode Toggle */}
+      {tasks.length > 1 && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: isReorderMode ? '#28A745' : '#6c757d',
+            padding: 12,
+            borderRadius: 8,
+            marginHorizontal: 16,
+            marginBottom: 10,
+            alignItems: 'center',
+          }}
+          onPress={() => setIsReorderMode(!isReorderMode)}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+            {isReorderMode ? '✓ Done Reordering' : '↕️ Reorder Tasks'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {isReorderMode && (
+        <Text style={{ textAlign: 'center', color: '#666', marginBottom: 10, fontStyle: 'italic' }}>
+          Tap the arrows to move tasks up or down
+        </Text>
+      )}
+
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
         {tasks.map((item, index) => (
           <View key={index}>
-            {renderItem({ item })}
+            {renderItem({ item, index })}
           </View>
         ))}
       </ScrollView>

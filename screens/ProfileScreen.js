@@ -109,9 +109,12 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Role Selection */}
+      {/* Global Mode Toggle */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.textColor || '#4B0082' }]}>Your Role</Text>
+        <Text style={[styles.sectionTitle, { color: theme.textColor || '#4B0082' }]}>Current Mode</Text>
+        <Text style={[styles.modeHelpText, { color: theme.placeholderTextColor || '#666' }]}>
+          Switch between modes to change what you can do in the app
+        </Text>
         <View style={styles.roleContainer}>
           <TouchableOpacity
             style={[
@@ -121,15 +124,16 @@ export default function ProfileScreen() {
                 backgroundColor: profile.role === 'sub' 
                   ? (theme.activeTabButton?.backgroundColor || '#D8BFD8') 
                   : (theme.tabButton?.backgroundColor || '#E6E6FA'),
-                borderColor: theme.borderColor || '#4B0082'
+                borderColor: profile.role === 'sub' ? '#28A745' : (theme.borderColor || '#4B0082'),
+                borderWidth: profile.role === 'sub' ? 3 : 1,
               }
             ]}
             onPress={() => setRole('sub')}
           >
-            <Text style={[styles.roleIcon]}>👤</Text>
-            <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Sub</Text>
+            <Text style={[styles.roleIcon]}>💗</Text>
+            <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Sub Mode</Text>
             <Text style={[styles.roleDescription, { color: theme.placeholderTextColor || '#666' }]}>
-              Complete tasks, earn rewards
+              Complete tasks from all your Doms
             </Text>
           </TouchableOpacity>
           
@@ -141,18 +145,26 @@ export default function ProfileScreen() {
                 backgroundColor: profile.role === 'dom' 
                   ? (theme.activeTabButton?.backgroundColor || '#D8BFD8') 
                   : (theme.tabButton?.backgroundColor || '#E6E6FA'),
-                borderColor: theme.borderColor || '#4B0082'
+                borderColor: profile.role === 'dom' ? '#28A745' : (theme.borderColor || '#4B0082'),
+                borderWidth: profile.role === 'dom' ? 3 : 1,
               }
             ]}
             onPress={() => setRole('dom')}
           >
-            <Text style={[styles.roleIcon]}>👑</Text>
-            <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Dom</Text>
+            <Text style={[styles.roleIcon]}>🔒</Text>
+            <Text style={[styles.roleText, { color: theme.textColor || '#4B0082' }]}>Dom Mode</Text>
             <Text style={[styles.roleDescription, { color: theme.placeholderTextColor || '#666' }]}>
-              Assign tasks, manage rewards
+              Create tasks for all your Subs
             </Text>
           </TouchableOpacity>
         </View>
+        {profile.role && (
+          <View style={[styles.currentModeIndicator, { backgroundColor: profile.role === 'dom' ? '#FFE4E1' : '#E8F5E9' }]}>
+            <Text style={styles.currentModeText}>
+              Currently in {profile.role === 'dom' ? '🔒 Dom' : '💗 Sub'} Mode
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Stats Section */}
@@ -344,6 +356,21 @@ const styles = StyleSheet.create({
   },
   orText: {
     fontSize: 14,
+    fontWeight: '600',
+  },
+  modeHelpText: {
+    fontSize: 13,
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  currentModeIndicator: {
+    marginTop: 15,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  currentModeText: {
+    fontSize: 16,
     fontWeight: '600',
   },
 });
