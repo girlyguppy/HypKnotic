@@ -1,10 +1,9 @@
 /**
  * SetupScreen - First-run experience
  * 
- * Allows user to:
- * 1. Choose their primary role (Solo/Dom/Sub/Switch)
- * 2. Create a PIN for security
- * 3. Optionally pair with first partner
+ * SIMPLIFIED: No global roles!
+ * Just asks: Solo or Connect with Partner?
+ * Role is selected PER-RELATIONSHIP when pairing.
  */
 
 import React, { useState } from 'react';
@@ -22,43 +21,38 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../data/AuthContext';
 import { useRelationships } from '../data/RelationshipContext';
 
-const ROLES = [
+// No global roles! Just setup modes
+const SETUP_MODES = [
   {
     id: 'solo',
-    label: 'Solo',
+    label: 'Start Solo',
     icon: 'person-outline',
-    description: 'Use the app by yourself without a partner',
+    description: 'Use the app by yourself - you manage your own tasks (can add partners later)',
     color: '#9C27B0',
   },
   {
-    id: 'sub',
-    label: 'Submissive',
-    icon: 'heart-outline',
-    description: 'Tasks and rewards are managed by your Dom partner',
+    id: 'partner',
+    label: 'Connect with Partner',
+    icon: 'people-outline',
+    description: 'Pair with someone - choose your role (Dom/Sub/Switch) when connecting',
     color: '#E91E63',
-  },
-  {
-    id: 'dom',
-    label: 'Dominant',
-    icon: 'shield-outline',
-    description: 'Create and manage tasks/rewards for your Sub partner',
-    color: '#673AB7',
-  },
-  {
-    id: 'switch',
-    label: 'Switch',
-    icon: 'swap-horizontal-outline',
-    description: 'Toggle between Dom and Sub modes as needed',
-    color: '#3F51B5',
   },
 ];
 
+// Role options shown ONLY when pairing with a partner
+const PARTNER_ROLES = [
+  { id: 'dom', label: 'Dominant', icon: 'shield-outline', color: '#673AB7' },
+  { id: 'sub', label: 'Submissive', icon: 'heart-outline', color: '#E91E63' },
+  { id: 'switch', label: 'Switch', icon: 'swap-horizontal-outline', color: '#3F51B5' },
+];
+
 export default function SetupScreen({ onComplete, onSkip }) {
-  const { createAccount, skipAuth } = useAuth();
+  const { createAccount } = useAuth();
   const { enableSoloMode, createRelationship, generatePairingCode } = useRelationships();
   
-  const [step, setStep] = useState(1); // 1: role, 2: pin, 3: partner (optional)
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [step, setStep] = useState(1); // 1: solo/partner, 2: pin, 3: role selection, 4: pairing
+  const [setupMode, setSetupMode] = useState(null); // 'solo' or 'partner'
+  const [selectedRole, setSelectedRole] = useState(null); // Only for partner mode
   const [displayName, setDisplayName] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
@@ -66,13 +60,13 @@ export default function SetupScreen({ onComplete, onSkip }) {
   const [generatedCode, setGeneratedCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
 
-  const handleRoleSelect = (roleId) => {
-    setSelectedRole(roleId);
+  const handleModeSelect = (modeId) => {
+    setSetupMode(modeId);
   };
 
-  const handleContinueFromRole = () => {
-    if (!selectedRole) {
-      showAlert('Please select a mode');
+  const handleContinueFromMode = () => {
+    if (!setupMode) {
+      showAlert('Please select how you want to use the app');
       return;
     }
     setStep(2);
@@ -89,25 +83,36 @@ export default function SetupScreen({ onComplete, onSkip }) {
     }
 
     try {
-      // Create the account
+      // Create the account (NO global role!)
       await createAccount({
         displayName: displayName || 'User',
         pin,
-        defaultRole: selectedRole === 'solo' ? 'switch' : selectedRole,
-        switchModeEnabled: selectedRole === 'switch',
+        // No defaultRole - roles are per-relationship
       });
 
-      if (selectedRole === 'solo') {
-        // Solo mode - skip partner setup
+      if (setupMode === 'solo') {
+        // Solo mode - create self-relationship
         await enableSoloMode();
         onComplete?.();
       } else {
-        // Go to partner setup
+        // Partner mode - go to role selection
         setStep(3);
       }
     } catch (error) {
       showAlert('Error creating account: ' + error.message);
     }
+  };
+
+  const handleRoleSelect = (roleId) => {
+    setSelectedRole(roleId);
+  };
+
+  const handleContinueFromRole = () => {
+    if (!selectedRole) {
+      showAlert('Please select your role for this relationship');
+      return;
+    }
+    setStep(4); // Go to pairing
   };
 
   const handleSkipPartner = async () => {
@@ -123,7 +128,7 @@ export default function SetupScreen({ onComplete, onSkip }) {
     // Create relationship waiting for partner
     await createRelationship({
       partnerName: 'Waiting...',
-      myRole: selectedRole === 'switch' ? 'switch' : selectedRole,
+      myRole: selectedRole,
       theirRole: selectedRole === 'dom' ? 'sub' : (selectedRole === 'sub' ? 'dom' : 'switch'),
       pairingCode: code,
     });
@@ -138,7 +143,7 @@ export default function SetupScreen({ onComplete, onSkip }) {
     // Create relationship with the code
     await createRelationship({
       partnerName: 'Partner',
-      myRole: selectedRole === 'switch' ? 'switch' : selectedRole,
+      myRole: selectedRole,
       theirRole: selectedRole === 'dom' ? 'sub' : (selectedRole === 'sub' ? 'dom' : 'switch'),
       pairingCode: pairingCode,
     });
@@ -163,31 +168,37 @@ export default function SetupScreen({ onComplete, onSkip }) {
         <View style={[styles.progressDot, step >= 2 && styles.progressDotActive]} />
         <View style={styles.progressLine} />
         <View style={[styles.progressDot, step >= 3 && styles.progressDotActive]} />
+        {setupMode === 'partner' && (
+          <>
+            <View style={styles.progressLine} />
+            <View style={[styles.progressDot, step >= 4 && styles.progressDotActive]} />
+          </>
+        )}
       </View>
 
-      {/* Step 1: Role Selection */}
+      {/* Step 1: Solo or Partner? (NO global roles!) */}
       {step === 1 && (
         <View style={styles.stepContainer}>
           <Text style={styles.title}>Welcome to HypKnotic</Text>
-          <Text style={styles.subtitle}>How would you like to use the app?</Text>
+          <Text style={styles.subtitle}>How would you like to start?</Text>
 
           <View style={styles.rolesContainer}>
-            {ROLES.map((role) => (
+            {SETUP_MODES.map((mode) => (
               <TouchableOpacity
-                key={role.id}
+                key={mode.id}
                 style={[
                   styles.roleCard,
-                  selectedRole === role.id && { borderColor: role.color, borderWidth: 2 },
+                  setupMode === mode.id && { borderColor: mode.color, borderWidth: 2 },
                 ]}
-                onPress={() => handleRoleSelect(role.id)}
+                onPress={() => handleModeSelect(mode.id)}
               >
-                <View style={[styles.roleIcon, { backgroundColor: role.color + '20' }]}>
-                  <Ionicons name={role.icon} size={32} color={role.color} />
+                <View style={[styles.roleIcon, { backgroundColor: mode.color + '20' }]}>
+                  <Ionicons name={mode.icon} size={32} color={mode.color} />
                 </View>
-                <Text style={styles.roleLabel}>{role.label}</Text>
-                <Text style={styles.roleDescription}>{role.description}</Text>
-                {selectedRole === role.id && (
-                  <View style={[styles.checkmark, { backgroundColor: role.color }]}>
+                <Text style={styles.roleLabel}>{mode.label}</Text>
+                <Text style={styles.roleDescription}>{mode.description}</Text>
+                {setupMode === mode.id && (
+                  <View style={[styles.checkmark, { backgroundColor: mode.color }]}>
                     <Ionicons name="checkmark" size={16} color="white" />
                   </View>
                 )}
@@ -195,7 +206,7 @@ export default function SetupScreen({ onComplete, onSkip }) {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleContinueFromRole}>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleContinueFromMode}>
             <Text style={styles.primaryButtonText}>Continue</Text>
           </TouchableOpacity>
           
@@ -263,8 +274,53 @@ export default function SetupScreen({ onComplete, onSkip }) {
         </View>
       )}
 
-      {/* Step 3: Partner Pairing (optional) */}
+      {/* Step 3: Role Selection for this Partner (ONLY for partner mode) */}
       {step === 3 && (
+        <View style={styles.stepContainer}>
+          <Text style={styles.title}>Your Role</Text>
+          <Text style={styles.subtitle}>What's your role with this partner?</Text>
+
+          <View style={styles.rolesContainer}>
+            {PARTNER_ROLES.map((role) => (
+              <TouchableOpacity
+                key={role.id}
+                style={[
+                  styles.roleCard,
+                  selectedRole === role.id && { borderColor: role.color, borderWidth: 2 },
+                ]}
+                onPress={() => handleRoleSelect(role.id)}
+              >
+                <View style={[styles.roleIcon, { backgroundColor: role.color + '20' }]}>
+                  <Ionicons name={role.icon} size={32} color={role.color} />
+                </View>
+                <Text style={styles.roleLabel}>{role.label}</Text>
+                <Text style={styles.roleDescription}>
+                  {role.id === 'dom' && 'Create tasks and manage your partner'}
+                  {role.id === 'sub' && 'Complete tasks assigned by your partner'}
+                  {role.id === 'switch' && 'Toggle between Dom and Sub modes'}
+                </Text>
+                {selectedRole === role.id && (
+                  <View style={[styles.checkmark, { backgroundColor: role.color }]}>
+                    <Ionicons name="checkmark" size={16} color="white" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => setStep(2)}>
+              <Text style={styles.secondaryButtonText}>Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.primaryButton} onPress={handleContinueFromRole}>
+              <Text style={styles.primaryButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Step 4: Partner Pairing */}
+      {step === 4 && (
         <View style={styles.stepContainer}>
           <Text style={styles.title}>Connect with Partner</Text>
           <Text style={styles.subtitle}>
