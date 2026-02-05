@@ -326,7 +326,139 @@ export const createSemanticTheme = (config) => {
       },
     },
     
-    // Backwards compatibility - flat color properties
+    // ============================================================
+    // BACKWARDS COMPATIBILITY - Old theme structure
+    // These properties ensure existing screens work without changes
+    // ============================================================
+    
+    // Old-style container (used by NotesTab, JournalsTab, etc.)
+    container: {
+      flex: 1,
+      backgroundColor: background,
+      padding: 20,
+    },
+    
+    // Old-style title
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: textPrimary,
+      marginVertical: 10,
+    },
+    
+    // Old-style button
+    button: {
+      backgroundColor: primary,
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 5,
+    },
+    
+    // Old-style buttonText
+    buttonText: {
+      fontSize: 16,
+      color: textOnPrimary,
+    },
+    
+    // Old-style input
+    input: {
+      borderWidth: 1,
+      borderColor: border,
+      backgroundColor: inputBackground,
+      color: inputText,
+      padding: 10,
+      marginVertical: 10,
+      borderRadius: 5,
+    },
+    
+    // Old-style entryContainer
+    entryContainer: {
+      padding: 10,
+      borderWidth: 1,
+      borderColor: border,
+      backgroundColor: surface,
+      marginVertical: 10,
+      borderRadius: 5,
+    },
+    
+    // Old-style tabButton
+    tabButton: {
+      padding: 10,
+      borderRadius: 5,
+      alignItems: 'center',
+      marginVertical: 5,
+      backgroundColor: surface,
+    },
+    
+    // Old-style activeTabButton
+    activeTabButton: {
+      backgroundColor: primary,
+    },
+    
+    // Old-style tabButtonText
+    tabButtonText: {
+      color: textOnPrimary,
+    },
+    
+    // Old-style addButton
+    addButton: {
+      backgroundColor: primary,
+      padding: 15,
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: 10,
+    },
+    
+    // Old-style addButtonText
+    addButtonText: {
+      color: textOnPrimary,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    
+    // Old-style modalOverlay
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    
+    // Old-style modalContainer
+    modalContainer: {
+      backgroundColor: surface,
+      padding: 20,
+      borderRadius: 10,
+      width: '90%',
+      maxWidth: 400,
+    },
+    
+    // Old-style item
+    item: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: textPrimary,
+    },
+    
+    // Old-style drawer
+    drawer: {
+      backgroundColor: drawer,
+      textColor: drawerText,
+    },
+    
+    // Old-style header (for navigation)
+    header: {
+      backgroundColor: surface,
+      textColor: textPrimary,
+      iconColor: textPrimary,
+    },
+    
+    // ============================================================
+    // Flat color properties for backwards compatibility
+    // ============================================================
     punishmentBackground: surface,
     incrementButtonBackground: success,
     incrementButtonTextColor: getContrastText(success),
@@ -338,12 +470,15 @@ export const createSemanticTheme = (config) => {
     deleteButtonTextColor: getContrastText(danger),
     confirmButtonBackground: success,
     confirmButtonTextColor: getContrastText(success),
-    cancelButtonBackground: textMuted,
-    cancelButtonTextColor: '#FFFFFF',
+    cancelButtonBackground: danger,
+    cancelButtonTextColor: getContrastText(danger),
     formBackground: surface,
     modalOverlayBackground: 'rgba(0, 0, 0, 0.5)',
     inputBackground,
     inputBorderColor: border,
+    textColor: textPrimary,
+    placeholderTextColor: textMuted,
+    borderColor: border,
   };
 };
 

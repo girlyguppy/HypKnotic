@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useAtom } from 'jotai';
 import ColorPickerWheel from 'react-native-color-picker-wheel';
@@ -9,12 +9,39 @@ export default function ThemesScreen() {
   const [theme, setTheme] = useAtom(themeAtom);
   const [customColor, setCustomColor] = useState('#9B59B6');
   const [customDarkMode, setCustomDarkMode] = useState(false);
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const hasUserInteracted = useRef(false);
 
   const themeList = Object.entries(themes);
 
+  const handleSelectTheme = (themeOption) => {
+    setIsCustomMode(false);
+    setTheme(themeOption);
+  };
+
+  const handleCustomColorChange = (color) => {
+    // Only apply if user has actually interacted
+    if (hasUserInteracted.current) {
+      setCustomColor(color);
+      setIsCustomMode(true);
+      setTheme(createCustomTheme(color, customDarkMode));
+    }
+  };
+
+  const handleColorPickerStart = () => {
+    hasUserInteracted.current = true;
+  };
+
+  const handleDarkModeToggle = (value) => {
+    hasUserInteracted.current = true;
+    setCustomDarkMode(value);
+    setIsCustomMode(true);
+    setTheme(createCustomTheme(customColor, value));
+  };
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors?.background || '#F3E8FF' }]}>
-      <Text style={[styles.title, { color: theme.colors?.text || '#1A1A1A' }]}>Select Theme</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors?.background || theme.container?.backgroundColor || '#F3E8FF' }]}>
+      <Text style={[styles.title, { color: theme.colors?.text || theme.title?.color || '#1A1A1A' }]}>Select Theme</Text>
       
       <View style={styles.buttonContainer}>
         {themeList.map(([key, themeOption]) => (
@@ -24,11 +51,11 @@ export default function ThemesScreen() {
               styles.themeButton, 
               { 
                 backgroundColor: themeOption.colors.primary,
-                borderWidth: theme.name === themeOption.name ? 3 : 0,
+                borderWidth: theme.name === themeOption.name && !isCustomMode ? 3 : 0,
                 borderColor: theme.colors?.text || '#000',
               }
             ]} 
-            onPress={() => setTheme(themeOption)}
+            onPress={() => handleSelectTheme(themeOption)}
           >
             <Text style={[styles.buttonText, { color: themeOption.colors.textOnPrimary }]}>
               {themeOption.name}
@@ -40,46 +67,45 @@ export default function ThemesScreen() {
         ))}
       </View>
 
-      <View style={[styles.section, { backgroundColor: theme.colors?.surface || '#FFF' }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors?.text || '#1A1A1A' }]}>
-          Custom Theme
+      <View style={[styles.section, { 
+        backgroundColor: theme.colors?.surface || theme.entryContainer?.backgroundColor || '#FFF',
+        borderWidth: isCustomMode ? 3 : 0,
+        borderColor: theme.colors?.primary || '#9B59B6',
+      }]}>
+        <Text style={[styles.sectionTitle, { color: theme.colors?.text || theme.title?.color || '#1A1A1A' }]}>
+          Custom Theme {isCustomMode ? '✓' : ''}
         </Text>
         
         <View style={styles.darkModeRow}>
-          <Text style={{ color: theme.colors?.text || '#1A1A1A' }}>Dark Mode</Text>
+          <Text style={{ color: theme.colors?.text || theme.title?.color || '#1A1A1A' }}>Dark Mode</Text>
           <Switch 
             value={customDarkMode} 
-            onValueChange={(value) => {
-              setCustomDarkMode(value);
-              setTheme(createCustomTheme(customColor, value));
-            }}
+            onValueChange={handleDarkModeToggle}
           />
         </View>
         
         <ColorPickerWheel
           initialColor={customColor}
-          onColorChangeComplete={(color) => {
-            setCustomColor(color);
-            setTheme(createCustomTheme(color, customDarkMode));
-          }}
+          onColorChange={handleColorPickerStart}
+          onColorChangeComplete={handleCustomColorChange}
           style={styles.colorPicker}
         />
       </View>
 
       <View style={styles.previewSection}>
-        <Text style={[styles.sectionTitle, { color: theme.colors?.text || '#1A1A1A' }]}>
+        <Text style={[styles.sectionTitle, { color: theme.colors?.text || theme.title?.color || '#1A1A1A' }]}>
           Preview
         </Text>
-        <View style={[styles.previewCard, { backgroundColor: theme.colors?.surface || '#FFF' }]}>
-          <Text style={{ color: theme.colors?.text, marginBottom: 8 }}>Text on surface</Text>
-          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.primary }]}>
-            <Text style={{ color: theme.colors?.textOnPrimary }}>Primary Button</Text>
+        <View style={[styles.previewCard, { backgroundColor: theme.colors?.surface || theme.entryContainer?.backgroundColor || '#FFF' }]}>
+          <Text style={{ color: theme.colors?.text || theme.title?.color, marginBottom: 8 }}>Text on surface</Text>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.primary || theme.button?.backgroundColor }]}>
+            <Text style={{ color: theme.colors?.textOnPrimary || theme.buttonText?.color }}>Primary Button</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.success }]}>
-            <Text style={{ color: theme.colors?.successText }}>Success Button</Text>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.success || theme.incrementButtonBackground }]}>
+            <Text style={{ color: theme.colors?.successText || '#FFFFFF' }}>Success Button</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.danger }]}>
-            <Text style={{ color: theme.colors?.dangerText }}>Danger Button</Text>
+          <TouchableOpacity style={[styles.previewButton, { backgroundColor: theme.colors?.danger || theme.deleteButtonBackground }]}>
+            <Text style={{ color: theme.colors?.dangerText || '#FFFFFF' }}>Danger Button</Text>
           </TouchableOpacity>
         </View>
       </View>
