@@ -314,4 +314,55 @@ Certain words related to "clearing data" or "starting fresh" may trigger looping
 
 ---
 
+## 🔄 Gun.js Sync (Added 2026-02-05)
+
+### How It Works
+1. **Dom generates code** → Code registered with Gun.js relay servers
+2. **Sub enters code** → Connects via Gun.js to find Dom
+3. **Real-time sync** → Data syncs between devices via Gun.js
+
+### Implementation
+- `GunSyncService.js` - Handles all Gun.js communication
+- `RelationshipContext.js` - Integrates sync with app state
+- `PartnerManagementScreen.js` - UI for pairing and sync status
+
+### Sync Status States
+- `disconnected` - Not paired or offline
+- `connecting` - Attempting to pair
+- `connected` - Paired and ready
+- `syncing` - Actively syncing data
+
+### Conflict Resolution
+- **Dom priority** - Dom's data wins on conflicts
+- **Append-only history** - All history entries merged
+- **Timestamps** - Most recent wins when roles equal
+
+---
+
+## 🔐 Mode-Based Permissions (Added 2026-02-05)
+
+### Sub Mode (💗)
+- ✅ Complete tasks (+1 Progress)
+- ✅ Purchase rewards (spend points)
+- ✅ Use rewards
+- ✅ Complete punishments
+- ❌ Create tasks
+- ❌ Create rewards
+- ❌ Create punishments
+- ❌ Delete anything
+
+### Dom Mode (🔒)
+- ✅ Create tasks
+- ✅ Create rewards  
+- ✅ Create punishments
+- ✅ Delete tasks/rewards/punishments
+- ✅ Add/remove punishment counts
+- ❌ Complete tasks
+- ❌ Purchase/use rewards
+
+### Solo Mode (🔄)
+- All permissions (you're both Dom and Sub to yourself)
+
+---
+
 *This log was created by GitHub Copilot Agent to help future agents understand the codebase and continue development.*
