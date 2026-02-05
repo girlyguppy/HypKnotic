@@ -39,8 +39,12 @@ export default function PartnerManagementScreen({ navigation }) {
     switchRelationship,
     createRelationship,
     generatePairingCode,
+    joinWithPairingCode,
+    syncWithPartner,
     deleteRelationship,
     updateVisibility,
+    syncStatus,
+    lastSyncTime,
   } = useRelationships();
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -49,6 +53,7 @@ export default function PartnerManagementScreen({ navigation }) {
   const [joinCode, setJoinCode] = useState('');
   const [newPartnerName, setNewPartnerName] = useState('');
   const [selectedRole, setSelectedRole] = useState('sub');
+  const [isJoining, setIsJoining] = useState(false);
 
   const relationshipList = Object.values(relationships);
 
@@ -78,15 +83,28 @@ export default function PartnerManagementScreen({ navigation }) {
       return;
     }
 
-    await createRelationship({
-      partnerName: newPartnerName || 'Partner',
-      myRole: selectedRole,
-      theirRole: selectedRole === 'dom' ? 'sub' : (selectedRole === 'sub' ? 'dom' : 'switch'),
-      pairingCode: joinCode,
-    });
+    setIsJoining(true);
+    
+    try {
+      // Try to join via Gun.js
+      await joinWithPairingCode(joinCode);
+      
+      // Create the relationship locally
+      await createRelationship({
+        partnerName: newPartnerName || 'Partner',
+        myRole: selectedRole,
+        theirRole: selectedRole === 'dom' ? 'sub' : (selectedRole === 'sub' ? 'dom' : 'switch'),
+        pairingCode: joinCode,
+      });
 
-    setShowAddModal(false);
-    resetAddModal();
+      setShowAddModal(false);
+      resetAddModal();
+      showAlert('Successfully connected with partner!');
+    } catch (error) {
+      showAlert('Failed to connect: ' + error.message);
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   const resetAddModal = () => {
@@ -133,6 +151,27 @@ export default function PartnerManagementScreen({ navigation }) {
         <Text style={[styles.subtitle, dynamicStyles.subtitle]}>
           Manage your relationships and visibility
         </Text>
+
+        {/* Sync Status Indicator */}
+        <View style={[styles.syncStatus, { backgroundColor: syncStatus === 'connected' ? '#d4edda' : syncStatus === 'syncing' ? '#fff3cd' : '#f8d7da' }]}>
+          <Ionicons 
+            name={syncStatus === 'connected' ? 'cloud-done' : syncStatus === 'syncing' ? 'cloud-upload' : 'cloud-offline'} 
+            size={20} 
+            color={syncStatus === 'connected' ? '#155724' : syncStatus === 'syncing' ? '#856404' : '#721c24'} 
+          />
+          <Text style={{ marginLeft: 8, color: syncStatus === 'connected' ? '#155724' : syncStatus === 'syncing' ? '#856404' : '#721c24' }}>
+            {syncStatus === 'connected' ? 'Connected' : syncStatus === 'syncing' ? 'Syncing...' : 'Disconnected'}
+            {lastSyncTime && syncStatus === 'connected' && ` (Last: ${new Date(lastSyncTime).toLocaleTimeString()})`}
+          </Text>
+          {syncStatus === 'connected' && (
+            <TouchableOpacity 
+              style={{ marginLeft: 'auto', padding: 4 }} 
+              onPress={syncWithPartner}
+            >
+              <Ionicons name="sync" size={20} color="#155724" />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Relationship List */}
         {relationshipList.length === 0 ? (
@@ -380,6 +419,13 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
     padding: 20,
+  },
+  syncStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,

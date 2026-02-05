@@ -6,10 +6,12 @@
  * - Role per relationship (Dom/Sub/Switch)
  * - Per-relationship data (tasks, rewards, points)
  * - Visibility controls
+ * - Gun.js sync for real-time partner sync
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GunSyncService from './GunSyncService';
 
 const RelationshipContext = createContext();
 
@@ -20,11 +22,56 @@ export function RelationshipProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [soloMode, setSoloMode] = useState(false);
   const [currentMode, setCurrentMode] = useState('sub'); // 'dom' or 'sub' - for switch/solo modes
+  const [syncStatus, setSyncStatus] = useState('disconnected'); // 'disconnected', 'connecting', 'connected', 'syncing'
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  
+  // Gun.js sync service instance
+  const gunSyncRef = useRef(null);
 
   // Load on startup
   useEffect(() => {
     loadRelationships();
+    initializeGunSync();
   }, []);
+
+  // Initialize Gun.js sync
+  async function initializeGunSync() {
+    try {
+      gunSyncRef.current = new GunSyncService();
+      await gunSyncRef.current.initialize();
+      setSyncStatus('disconnected');
+      
+      // Set up listeners
+      gunSyncRef.current.addListener('partner_connected', () => {
+        setSyncStatus('connected');
+      });
+      
+      gunSyncRef.current.addListener('sync_pushed', ({ timestamp }) => {
+        setLastSyncTime(timestamp);
+        setSyncStatus('connected');
+      });
+      
+      gunSyncRef.current.addListener('sync_received', ({ data }) => {
+        // Handle incoming sync data
+        handleIncomingSync(data);
+      });
+      
+      console.log('Gun.js sync initialized');
+    } catch (error) {
+      console.error('Failed to initialize Gun.js sync:', error);
+    }
+  }
+  
+  // Handle incoming sync data from partner
+  async function handleIncomingSync(data) {
+    if (!activeRelationshipId || !data) return;
+    
+    const currentData = relationshipData[activeRelationshipId] || {};
+    const merged = await gunSyncRef.current?.pullAndMerge(currentData) || currentData;
+    
+    await updateRelationshipData(activeRelationshipId, merged);
+    setLastSyncTime(Date.now());
+  }
 
   async function loadRelationships() {
     try {
@@ -159,9 +206,69 @@ export function RelationshipProvider({ children }) {
 
   /**
    * Generate a 6-digit pairing code for a new relationship
+   * This also registers the code with Gun.js for real-time pairing
    */
   function generatePairingCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Register with Gun.js for real-time pairing
+    if (gunSyncRef.current) {
+      try {
+        gunSyncRef.current.generatePairingCode(code);
+        setSyncStatus('connecting');
+        console.log('Pairing code registered with Gun.js:', code);
+      } catch (error) {
+        console.error('Failed to register pairing code:', error);
+      }
+    }
+    
+    return code;
+  }
+  
+  /**
+   * Join an existing pairing using a code
+   */
+  async function joinWithPairingCode(code) {
+    if (!gunSyncRef.current) {
+      throw new Error('Sync service not initialized');
+    }
+    
+    setSyncStatus('connecting');
+    
+    try {
+      const success = await gunSyncRef.current.joinWithCode(code);
+      if (success) {
+        setSyncStatus('connected');
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to join with code:', error);
+      setSyncStatus('disconnected');
+      throw error;
+    }
+    
+    return false;
+  }
+  
+  /**
+   * Push current state to partner via Gun.js
+   */
+  async function syncWithPartner() {
+    if (!gunSyncRef.current || !activeRelationshipId) return;
+    
+    const currentData = relationshipData[activeRelationshipId];
+    if (!currentData) return;
+    
+    setSyncStatus('syncing');
+    
+    try {
+      await gunSyncRef.current.pushFullState(currentData);
+      setLastSyncTime(Date.now());
+      setSyncStatus('connected');
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('connected');
+    }
   }
 
   /**
@@ -304,11 +411,15 @@ export function RelationshipProvider({ children }) {
     soloMode,
     isSoloMode,
     currentMode,
+    syncStatus,
+    lastSyncTime,
     
     // Actions
     enableSoloMode,
     createRelationship,
     generatePairingCode,
+    joinWithPairingCode,
+    syncWithPartner,
     switchRelationship,
     setActiveRelationship,
     toggleMode,
@@ -335,6 +446,11 @@ export function useRelationships() {
     throw new Error('useRelationships must be used within RelationshipProvider');
   }
   return context;
+}
+
+// Alias for convenience
+export function useRelationship() {
+  return useRelationships();
 }
 
 export default RelationshipContext;
