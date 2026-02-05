@@ -156,6 +156,15 @@ function AppContent() {
   const { isLoading: relLoading, soloMode, enableSoloMode } = useRelationships();
   const [isDeveloperMode, setIsDeveloperMode] = useState(true); // Dev mode ON by default
   const [setupComplete, setSetupComplete] = useState(false);
+  
+  // DEBUG: Log the current state on every render
+  console.log('=== APP DEBUG ===');
+  console.log('authLoading:', authLoading);
+  console.log('relLoading:', relLoading);
+  console.log('needsSetup:', needsSetup);
+  console.log('setupComplete:', setupComplete);
+  console.log('isAuthenticated:', isAuthenticated);
+  console.log('isDeveloperMode:', isDeveloperMode);
 
   // Show loading screen while checking auth state
   if (authLoading || relLoading) {
@@ -196,6 +205,21 @@ function AppContent() {
 
   return (
     <NavigationContainer>
+      {/* DEBUG BANNER - Remove after confirming code is loading */}
+      <View style={{ 
+        backgroundColor: '#FF00FF', 
+        padding: 5, 
+        alignItems: 'center',
+        position: 'absolute',
+        top: 30,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+      }}>
+        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 10 }}>
+          DEBUG: v2.0 - needsSetup:{String(needsSetup)} auth:{String(isAuthenticated)}
+        </Text>
+      </View>
       <Drawer.Navigator
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={({ navigation }) => ({
