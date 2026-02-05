@@ -1,7 +1,6 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useAtom } from 'jotai';
-import ColorPickerWheel from 'react-native-color-picker-wheel';
 import { themeAtom } from '../atoms/themeAtom';
 import { themes, createCustomTheme } from '../styles/ThemeSystem';
 
@@ -9,11 +8,18 @@ import { themes, createCustomTheme } from '../styles/ThemeSystem';
 const themeList = Object.entries(themes);
 const themeNames = themeList.map(([_, t]) => t.name);
 
+// Simple color palette for custom theme - avoids problematic ColorPickerWheel
+const colorPalette = [
+  '#9B59B6', '#E91E63', '#F44336', '#FF5722', '#FF9800',
+  '#FFC107', '#FFEB3B', '#8BC34A', '#4CAF50', '#009688',
+  '#00BCD4', '#03A9F4', '#2196F3', '#3F51B5', '#673AB7',
+];
+
 export default function ThemesScreen() {
   const [theme, setTheme] = useAtom(themeAtom);
   const [customColor, setCustomColor] = useState('#9B59B6');
   const [customDarkMode, setCustomDarkMode] = useState(false);
-  const hasUserInteracted = useRef(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
   
   // Derive isCustomMode from whether current theme matches any preset
   const isCustomMode = useMemo(() => {
@@ -21,25 +27,25 @@ export default function ThemesScreen() {
   }, [theme.name]);
 
   const handleSelectTheme = (themeOption) => {
+    setShowCustomPicker(false);
     setTheme(themeOption);
   };
 
-  const handleCustomColorChange = (color) => {
-    // Only apply if user has actually interacted
-    if (hasUserInteracted.current) {
-      setCustomColor(color);
-      setTheme(createCustomTheme(color, customDarkMode));
-    }
+  const handleActivateCustom = () => {
+    setShowCustomPicker(true);
+    setTheme(createCustomTheme(customColor, customDarkMode));
   };
 
-  const handleColorPickerStart = () => {
-    hasUserInteracted.current = true;
+  const handleCustomColorSelect = (color) => {
+    setCustomColor(color);
+    setTheme(createCustomTheme(color, customDarkMode));
   };
 
   const handleDarkModeToggle = (value) => {
-    hasUserInteracted.current = true;
     setCustomDarkMode(value);
-    setTheme(createCustomTheme(customColor, value));
+    if (showCustomPicker || isCustomMode) {
+      setTheme(createCustomTheme(customColor, value));
+    }
   };
 
   // Helper for theme button border styling
@@ -75,27 +81,41 @@ export default function ThemesScreen() {
 
       <View style={[styles.section, { 
         backgroundColor: theme.colors?.surface || theme.entryContainer?.backgroundColor || '#FFF',
-        borderWidth: isCustomMode ? 3 : 0,
+        borderWidth: (isCustomMode || showCustomPicker) ? 3 : 0,
         borderColor: theme.colors?.primary || '#9B59B6',
       }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors?.text || theme.title?.color || '#1A1A1A' }]}>
-          Custom Theme {isCustomMode ? '✓' : ''}
-        </Text>
+        <TouchableOpacity onPress={handleActivateCustom}>
+          <Text style={[styles.sectionTitle, { color: theme.colors?.text || theme.title?.color || '#1A1A1A' }]}>
+            Custom Theme {(isCustomMode || showCustomPicker) ? '✓' : '(tap to expand)'}
+          </Text>
+        </TouchableOpacity>
         
-        <View style={styles.darkModeRow}>
-          <Text style={{ color: theme.colors?.text || theme.title?.color || '#1A1A1A' }}>Dark Mode</Text>
-          <Switch 
-            value={customDarkMode} 
-            onValueChange={handleDarkModeToggle}
-          />
-        </View>
-        
-        <ColorPickerWheel
-          initialColor={customColor}
-          onColorChange={handleColorPickerStart}
-          onColorChangeComplete={handleCustomColorChange}
-          style={styles.colorPicker}
-        />
+        {(showCustomPicker || isCustomMode) && (
+          <>
+            <View style={styles.darkModeRow}>
+              <Text style={{ color: theme.colors?.text || theme.title?.color || '#1A1A1A' }}>Dark Mode</Text>
+              <Switch 
+                value={customDarkMode} 
+                onValueChange={handleDarkModeToggle}
+              />
+            </View>
+            
+            <Text style={[styles.colorLabel, { color: theme.colors?.text || '#1A1A1A' }]}>Select Color:</Text>
+            <View style={styles.colorPaletteContainer}>
+              {colorPalette.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: color },
+                    customColor === color && styles.selectedSwatch,
+                  ]}
+                  onPress={() => handleCustomColorSelect(color)}
+                />
+              ))}
+            </View>
+          </>
+        )}
       </View>
 
       <View style={styles.previewSection}>
@@ -171,8 +191,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  colorPicker: {
-    height: 200,
+  colorLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  colorPaletteContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+  },
+  colorSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 6,
+  },
+  selectedSwatch: {
+    borderWidth: 3,
+    borderColor: '#000',
   },
   previewSection: {
     marginTop: 8,
