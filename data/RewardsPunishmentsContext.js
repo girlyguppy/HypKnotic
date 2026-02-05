@@ -7,6 +7,15 @@ export const useRewardsPunishments = () => useContext(RewardsPunishmentsContext)
 export const RewardsPunishmentsProvider = ({ children }) => {
   const [rewards, setRewards] = useState([]);
   const [punishments, setPunishments] = useState([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+
+  const addPoints = (points) => {
+    setTotalPoints((prev) => prev + points);
+  };
+
+  const subtractPoints = (points) => {
+    setTotalPoints((prev) => prev - points);
+  };
 
   const addReward = (reward) => {
     setRewards([...rewards, reward]);
@@ -45,12 +54,15 @@ export const RewardsPunishmentsProvider = ({ children }) => {
       value={{
         rewards,
         punishments,
+        totalPoints,
         addReward,
         removeReward,
         addPunishment,
         removePunishment,
         updatePunishmentCount,
         updateRewardCount,
+        addPoints,
+        subtractPoints,
       }}
     >
       {children}

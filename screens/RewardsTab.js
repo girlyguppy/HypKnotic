@@ -5,13 +5,12 @@ import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 
 export default function RewardsTab() {
-  const { rewards, addReward, removeReward, updateRewardCount } = useRewardsPunishments();
+  const { rewards, addReward, removeReward, updateRewardCount, totalPoints, addPoints, subtractPoints } = useRewardsPunishments();
   const [theme] = useAtom(themeAtom);
   const [rewardName, setRewardName] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
   const [rewardPoints, setRewardPoints] = useState(0);
   const [showAddReward, setShowAddReward] = useState(false);
-  const [totalPoints, setTotalPoints] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleAddReward = () => {
@@ -30,7 +29,7 @@ export default function RewardsTab() {
 
   const handlePurchaseReward = (reward) => {
     if (totalPoints >= reward.points) {
-      setTotalPoints(totalPoints - reward.points);
+      subtractPoints(reward.points);
       updateRewardCount(reward.name, reward.quantity + 1);
     } else {
       if (Platform.OS === 'web') {
@@ -98,7 +97,11 @@ export default function RewardsTab() {
   };
 
   const handlePointChange = (amount) => {
-    setTotalPoints(totalPoints + amount);
+    if (amount > 0) {
+      addPoints(amount);
+    } else {
+      subtractPoints(Math.abs(amount));
+    }
   };
 
   const handleCancelAddReward = () => {

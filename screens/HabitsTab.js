@@ -9,15 +9,9 @@ import { useHabits } from '../data/HabitsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 
-const updatePoints = (points) => {
-  // Logic to update points
-  console.log(`Updating points by ${points}`);
-  // Add your logic to update the points here
-};
-
 export default function HabitsTab() {
   const { tasks, setTasks, addTask } = useHabits();
-  const { rewards, punishments, updatePunishmentCount, updateRewardCount } = useRewardsPunishments();
+  const { rewards, punishments, updatePunishmentCount, updateRewardCount, addPoints, subtractPoints } = useRewardsPunishments();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [taskName, setTaskName] = useState('');
@@ -122,19 +116,60 @@ export default function HabitsTab() {
   const handleRecurrenceChange = (type) => setRecurrence(type);
 
   const handleCompleteTask = (task) => {
-    // Logic to complete the task
-    task.isCompleted = true;
-    updatePoints(task.rewardPoints);
-    // Update the task state
-    setTasks([...tasks]);
+    const updatedTasks = tasks.map((t) => {
+      if (t.name === task.name) {
+        const newProgress = t.progress + 1;
+        const isNowCompleted = newProgress >= t.requiredCompletion;
+
+        // Give rewards based on condition
+        if (t.rewardCondition === 'progress') {
+          // Give points for each progress increment
+          if (t.successPoints > 0) {
+            addPoints(t.successPoints);
+          }
+          // Give rewards for each progress
+          t.rewards.forEach((reward) => {
+            updateRewardCount(reward.name, (rewards.find(r => r.name === reward.name)?.quantity || 0) + reward.quantity);
+          });
+        } else if (t.rewardCondition === 'completion' && isNowCompleted) {
+          // Give points only on completion
+          if (t.successPoints > 0) {
+            addPoints(t.successPoints);
+          }
+          // Give rewards only on completion
+          t.rewards.forEach((reward) => {
+            updateRewardCount(reward.name, (rewards.find(r => r.name === reward.name)?.quantity || 0) + reward.quantity);
+          });
+        }
+
+        return { ...t, progress: newProgress, isCompleted: isNowCompleted };
+      }
+      return t;
+    });
+
+    setTasks(updatedTasks);
   };
 
   const handleFailTask = (task) => {
-    // Logic to fail the task
-    task.isCompleted = false;
-    updatePoints(task.punishmentPoints);
-    // Update the task state
-    setTasks([...tasks]);
+    const updatedTasks = tasks.map((t) => {
+      if (t.name === task.name) {
+        // Subtract points for failure
+        if (t.failurePoints > 0) {
+          subtractPoints(t.failurePoints);
+        }
+        // Apply punishments
+        t.punishments.forEach((punishment) => {
+          const currentPunishment = punishments.find(p => p.name === punishment.name);
+          if (currentPunishment) {
+            updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+          }
+        });
+        return { ...t, hasFailed: true };
+      }
+      return t;
+    });
+
+    setTasks(updatedTasks);
   };
 
   const handleSlipup = (task) => {
@@ -144,17 +179,29 @@ export default function HabitsTab() {
         const hasFailed = newSlipups >= t.maxSlipups;
 
         if (t.punishmentCondition === 'slipup') {
+          // Apply punishments for each slipup
           t.punishments.forEach((punishment) => {
-            updatePunishmentCount(punishment.name, punishment.quantity); // Use quantity instead of count
+            const currentPunishment = punishments.find(p => p.name === punishment.name);
+            if (currentPunishment) {
+              updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+            }
           });
-          // Add slipup points
-          updatePoints(t.slipupPoints);
+          // Subtract slipup points
+          if (t.failurePoints > 0) {
+            subtractPoints(t.failurePoints);
+          }
         } else if (t.punishmentCondition === 'threshold' && hasFailed) {
+          // Apply punishments only when threshold is reached
           t.punishments.forEach((punishment) => {
-            updatePunishmentCount(punishment.name, punishment.quantity);
+            const currentPunishment = punishments.find(p => p.name === punishment.name);
+            if (currentPunishment) {
+              updatePunishmentCount(punishment.name, currentPunishment.count + punishment.quantity);
+            }
           });
-          // Add failure points
-          updatePoints(t.failurePoints);
+          // Subtract failure points
+          if (t.failurePoints > 0) {
+            subtractPoints(t.failurePoints);
+          }
         }
         return { ...t, slipups: newSlipups, hasFailed };
       }
@@ -287,17 +334,30 @@ export default function HabitsTab() {
         <Text>Slipups: {item.slipups}/{item.maxSlipups}</Text>
       )}
       <View style={styles.row}>
-        {item.mode === 'task' && (
+        {item.mode === 'task' && !item.isCompleted && (
           <Button
-            title={item.isCompleted ? "Completed" : "Complete Task"}
+            title={`+1 Progress (${item.progress}/${item.requiredCompletion})`}
             onPress={() => handleCompleteTask(item)}
-            disabled={item.isCompleted}
           />
         )}
-        {item.mode === 'badHabit' && (
+        {item.mode === 'task' && item.isCompleted && (
           <Button
-            title="Slipup"
+            title="✓ Completed"
+            disabled={true}
+          />
+        )}
+        {item.mode === 'badHabit' && !item.hasFailed && (
+          <Button
+            title={`Slipup (${item.slipups}/${item.maxSlipups})`}
             onPress={() => handleSlipup(item)}
+            color="#FF6347"
+          />
+        )}
+        {item.mode === 'badHabit' && item.hasFailed && (
+          <Button
+            title="Failed"
+            disabled={true}
+            color="#DC3545"
           />
         )}
         <Button
