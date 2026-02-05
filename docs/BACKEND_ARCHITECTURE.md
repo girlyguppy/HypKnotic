@@ -2,21 +2,51 @@
 
 ## Overview
 
-HypKnotic uses a **local-first, optional-sync** architecture that prioritizes privacy and works without requiring paid server hosting.
+HypKnotic uses a **local-first, "just works" sync** architecture that:
+- Works immediately without any server setup
+- Prioritizes privacy with encrypted sync
+- Uses free, decentralized infrastructure (Gun.js)
+- Allows self-hosting for advanced users
 
 ## Design Principles
 
-1. **Local-First**: All data stored on-device by default
-2. **Privacy-Focused**: End-to-end encrypted sync
-3. **FOSS Compatible**: No proprietary dependencies
-4. **Self-Hostable**: Optional relay server is open source
-5. **Offline Capable**: Full functionality without internet
+1. **Just Works**: No setup required for basic users
+2. **Local-First**: All data stored on-device
+3. **Full-State Sync**: Complete snapshots, not deltas
+4. **Dom Priority**: Conflicts resolve in Dom's favor
+5. **FOSS Compatible**: All components open source
+6. **Offline Capable**: Queue changes when offline
 
 ---
 
-## Architecture Layers
+## Architecture Overview
 
-### Layer 1: Local Storage (Implemented ✅)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Gun.js Relay Network                     │
+│         (Free public relays - no hosting needed!)           │
+│     gun-manhattan.herokuapp.com, gun-eu.herokuapp.com       │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+         ┌──────────────┴──────────────┐
+         │     Encrypted Data          │
+         │     Full-State Sync         │
+         │                             │
+    ┌────▼────┐                   ┌────▼────┐
+    │   DOM   │◄─────────────────►│   SUB   │
+    │ Device  │   Real-time sync  │ Device  │
+    │         │   when both on    │         │
+    └─────────┘                   └─────────┘
+         │                             │
+    ┌────▼────┐                   ┌────▼────┐
+    │ Local   │                   │ Local   │
+    │ Storage │                   │ Storage │
+    └─────────┘                   └─────────┘
+```
+
+---
+
+## Layer 1: Local Storage (✅ Implemented)
 
 **Location**: `data/StorageService.js`
 
@@ -31,67 +61,154 @@ All user data is stored locally using:
 - History & Activity Logs
 - Partner Pairing Data
 
-### Layer 2: P2P Direct Sync (Planned)
+---
 
-**Location**: `data/P2PService.js`
+## Layer 2: Gun.js Sync (✅ Implemented)
 
-Uses WebRTC for direct peer-to-peer connection:
+**Location**: `data/GunSyncService.js`
+
+Gun.js is a decentralized database that uses free public relay servers.
+
+### How Pairing Works
 
 ```
-┌──────────┐     WebRTC Data Channel     ┌──────────┐
-│   DOM    │◄───────────────────────────►│   SUB    │
-│  Device  │     (Encrypted E2E)         │  Device  │
-└──────────┘                              └──────────┘
+1. Dom opens Profile → "Generate Pairing Code"
+   └── Shows: 847291
+
+2. Sub opens Profile → enters: 847291
+   └── Both connected via Gun.js!
+
+3. Auto-sync begins
+   └── Any change syncs to partner
 ```
 
-**How Pairing Works**:
-1. Dom generates a 6-digit pairing code
-2. Sub enters the code
-3. Devices exchange signaling info (can use QR code for local pairing)
-4. WebRTC connection established
-5. Real-time sync begins
+### Why Gun.js?
 
-**Benefits**:
-- No server required when both online
-- True end-to-end encryption
-- Zero latency for real-time features
-- Completely free
+| Feature | Gun.js | Custom P2P | Own Server |
+|---------|--------|------------|------------|
+| No setup needed | ✅ | ❌ | ❌ |
+| Works offline | ✅ | ✅ | ❌ |
+| Free | ✅ | ✅ | ❌ |
+| Real-time | ✅ | ✅ | ✅ |
+| Self-hostable | ✅ | N/A | ✅ |
+| FOSS | ✅ MIT | ✅ | ✅ |
 
-### Layer 3: Relay Server (Optional, Planned)
+### Sync Protocol: Full-State
 
-For when both users aren't online simultaneously.
+Every sync transfers the complete state:
 
-**Design**:
-- Small Node.js server (~500 lines)
-- Stores encrypted sync packages
-- Acts as "mailbox" for offline messages
-- Open source, self-hostable
-
-**Options**:
-1. **Self-Host**: Run on any VPS, Raspberry Pi, or home server
-2. **Community Relays**: Volunteer-run public relays
-3. **No Relay**: Direct P2P only (both must be online)
-
-**Protocol**:
-```
-1. Dom makes change → Encrypt → Store locally
-2. If Sub offline → Queue to relay (encrypted)
-3. Sub comes online → Pull from relay → Decrypt → Apply
-4. Sub confirms receipt → Relay deletes data
+```javascript
+{
+  version: 47,
+  timestamp: "2024-02-05T12:00:00Z",
+  senderRole: "dom",
+  data: {
+    tasks: [...],      // All tasks
+    rewards: [...],    // All rewards
+    punishments: [...],// All punishments
+    history: [...],    // All history
+    totalPoints: 150,
+    settings: {...}
+  }
+}
 ```
 
-### Layer 4: Account Portability
+**Why Full-State (not deltas)?**
+- Simpler conflict resolution
+- Both devices always in sync
+- No "missing operation" bugs
+- Easier debugging
 
-**Export/Import**:
+---
+
+## Conflict Resolution: Dom Priority
+
+### Rules
+
+| Scenario | Resolution |
+|----------|------------|
+| Same item modified | Dom's version wins |
+| Sub completes task, Dom changed it | Dom's change applies, Sub notified |
+| Both offline, both edit | On sync: Dom priority |
+| New items | Both added (no conflict) |
+| Delete vs edit | Delete wins |
+
+### Example: Task Conflict
+
+```
+Timeline:
+10:00 - Dom creates: "Do 10 pushups"
+10:05 - Sub starts working on it (goes offline)
+10:07 - Dom changes to: "Do 20 pushups"
+10:10 - Sub marks "10 pushups" complete (still offline)
+10:15 - Both come online, sync happens
+
+Resolution:
+- Dom's change (10:07) has priority
+- Sub's completion (10:10) is REJECTED
+- Sub sees notification: "Task was updated, please review"
+- Sub must complete the new 20 pushup requirement
+```
+
+### Implementation
+
+```javascript
+mergeStates(localState, remotePacket) {
+  const domPriority = remotePacket.senderRole === 'dom' 
+                      && this.currentMode === 'sub';
+  
+  if (domPriority) {
+    // Remote is Dom, we're Sub - use their version
+    return { ...localState, ...remotePacket.data };
+  } else {
+    // We're Dom or remote is Sub - use our version
+    // Only add new items from remote
+    return mergeOnlyNewItems(localState, remotePacket.data);
+  }
+}
+```
+
+---
+
+## Layer 3: Account Portability
+
+### Export/Import
 - Export all data as encrypted JSON file
 - Password-protected backup
 - Import on new device
 - QR code for quick device transfer
 
-**Cloud Backup (Optional)**:
+### Cloud Backup (Optional)
 - Users can backup to their own cloud storage
 - Google Drive, Dropbox, iCloud (user's own account)
 - We never see the data
+
+---
+
+## Advanced: Self-Hosting a Relay
+
+For users who want maximum privacy, they can run their own Gun.js relay:
+
+```bash
+# Install Gun relay
+npm install gun
+
+# Create relay.js
+const Gun = require('gun');
+const server = require('http').createServer().listen(8765);
+const gun = Gun({ web: server });
+console.log('Gun relay running on port 8765');
+
+# Run it
+node relay.js
+```
+
+Then configure the app to use your relay:
+```javascript
+GunSyncService.initialize({
+  peers: ['http://your-server.com:8765/gun']
+});
+```
 
 ---
 
