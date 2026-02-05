@@ -74,15 +74,12 @@ export default function ThemesScreen() {
               <Ionicons 
                 name={(themeOption.icon || 'color-palette') + '-outline'} 
                 size={20} 
-                color={themeOption.colors.textOnPrimary} 
+                color={themeOption.colors.iconOnPrimary || themeOption.colors.textOnPrimary} 
                 style={styles.themeIcon}
               />
               <Text style={[styles.buttonText, { color: themeOption.colors.textOnPrimary }]}>
                 {themeOption.name}
               </Text>
-              {themeOption.isDark && (
-                <Ionicons name="moon-outline" size={14} color={themeOption.colors.textOnPrimary} style={{ marginLeft: 4 }} />
-              )}
             </View>
           </TouchableOpacity>
         ))}

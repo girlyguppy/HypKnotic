@@ -72,6 +72,12 @@ export const createSemanticTheme = (config) => {
   // Text on primary (accent) color
   const textOnPrimary = getContrastText(primary);
   
+  // Icon color on primary - use a contrasting shade of primary for depth
+  // If primary is dark, use lighter shade; if light, use darker shade
+  const iconOnPrimary = isColorDark(primary) 
+    ? adjustColor(primary, 80)  // Lighter shade for dark primary
+    : adjustColor(primary, -60); // Darker shade for light primary
+  
   // Text on surface
   const textOnSurface = getContrastText(surface);
   
@@ -126,6 +132,10 @@ export const createSemanticTheme = (config) => {
       textMuted,
       textOnPrimary,
       textOnSurface,
+      
+      // Icon colors
+      iconColor: textPrimary,
+      iconOnPrimary: iconOnPrimary,
       
       // Borders
       border,
