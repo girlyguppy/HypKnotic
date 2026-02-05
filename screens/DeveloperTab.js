@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
 import { useHabits } from '../data/HabitsContext';
+import { useAuth } from '../data/AuthContext';
 
 // Realistic sample data fitting the app's theme
 const SAMPLE_REWARDS = [
@@ -85,6 +86,7 @@ export default function DeveloperTab() {
   const [theme] = useAtom(themeAtom);
   const { rewards, punishments, addReward, addPunishment, addPoints } = useRewardsPunishments();
   const { addTask, tasks } = useHabits();
+  const { wipeAllData } = useAuth();
   const [log, setLog] = useState([]);
 
   const addLog = (message) => {
@@ -174,6 +176,32 @@ export default function DeveloperTab() {
     }, 200);
     handleAddPoints(100);
     addLog('🚀 Quick setup complete!');
+  };
+
+  const handleWipeAllData = () => {
+    const doWipe = async () => {
+      try {
+        await wipeAllData();
+        addLog('🗑️ All data wiped!');
+      } catch (error) {
+        addLog('❌ Error wiping data: ' + error.message);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('⚠️ WARNING: This will delete ALL app data and cannot be undone!\\n\\nAre you sure you want to continue?')) {
+        doWipe();
+      }
+    } else {
+      Alert.alert(
+        '⚠️ Wipe All Data',
+        'This will delete ALL app data and cannot be undone!\\n\\nYou will need to go through setup again.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Wipe Everything', style: 'destructive', onPress: doWipe },
+        ]
+      );
+    }
   };
 
   // Dynamic styles
@@ -268,6 +296,17 @@ export default function DeveloperTab() {
       fontSize: 12,
       color: theme.colors?.textSecondary || '#666666',
     },
+    dangerButton: {
+      backgroundColor: '#DC3545',
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    dangerButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
   };
 
   return (
@@ -342,6 +381,20 @@ export default function DeveloperTab() {
             )}
           </ScrollView>
         </View>
+      </View>
+
+      {/* Danger Zone */}
+      <View style={[dynamicStyles.section, { borderColor: '#DC3545', borderWidth: 2 }]}>
+        <Text style={[dynamicStyles.sectionTitle, { color: '#DC3545' }]}>⚠️ Danger Zone</Text>
+        <TouchableOpacity 
+          style={dynamicStyles.dangerButton} 
+          onPress={handleWipeAllData}
+        >
+          <Text style={dynamicStyles.dangerButtonText}>🗑️ WIPE ALL APP DATA</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 12, color: theme.colors?.textSecondary || '#666', textAlign: 'center', marginTop: 8 }}>
+          This will delete all data and return to setup
+        </Text>
       </View>
 
       <View style={{ height: 50 }} />

@@ -198,6 +198,29 @@ export function AuthProvider({ children }) {
     setNeedsSetup(false);
   }
 
+  /**
+   * Wipe all app data and return to fresh state
+   * WARNING: This is destructive and cannot be undone!
+   */
+  async function wipeAllData() {
+    try {
+      // Get all AsyncStorage keys and clear them
+      const keys = await AsyncStorage.getAllKeys();
+      await AsyncStorage.multiRemove(keys);
+      
+      // Clear state
+      setAccount(null);
+      setHasAccount(false);
+      setIsAuthenticated(false);
+      setNeedsSetup(true);
+      
+      return true;
+    } catch (error) {
+      console.error('Error wiping data:', error);
+      throw error;
+    }
+  }
+
   const value = {
     // State
     isAuthenticated,
@@ -215,6 +238,7 @@ export function AuthProvider({ children }) {
     lock,
     exportAccount,
     skipAuth,
+    wipeAllData,
   };
 
   return (
