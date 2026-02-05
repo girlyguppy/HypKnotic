@@ -53,7 +53,7 @@ const ROLES = [
   },
 ];
 
-export default function SetupScreen({ onComplete }) {
+export default function SetupScreen({ onComplete, onSkip }) {
   const { createAccount, skipAuth } = useAuth();
   const { enableSoloMode, createRelationship, generatePairingCode } = useRelationships();
   
@@ -198,6 +198,12 @@ export default function SetupScreen({ onComplete }) {
           <TouchableOpacity style={styles.primaryButton} onPress={handleContinueFromRole}>
             <Text style={styles.primaryButtonText}>Continue</Text>
           </TouchableOpacity>
+          
+          {onSkip && (
+            <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
+              <Text style={styles.skipButtonText}>Skip for now (Dev Mode)</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

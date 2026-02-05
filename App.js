@@ -139,7 +139,6 @@ function MainTabs({ isDeveloperMode }) {
         headerTitleAlign: 'center',
       })}
     >
-    >
       <Tab.Screen name="Rewards" component={RewardsTab} />
       <Tab.Screen name="Punishments" component={PunishmentsTab} />
       <Tab.Screen name="Habits" component={HabitsTab} />
@@ -173,17 +172,25 @@ function AppContent() {
     );
   }
 
-  // Show setup screen for new users
+  // Show setup screen for new users (but allow skipping for now during development)
   if (needsSetup && !setupComplete) {
     return (
       <SetupScreen 
-        onComplete={() => setSetupComplete(true)} 
+        onComplete={() => {
+          setSetupComplete(true);
+          skipAuth?.(); // Skip auth for now after setup
+        }}
+        onSkip={() => {
+          setSetupComplete(true);
+          skipAuth?.(); // Allow skipping setup
+        }}
       />
     );
   }
 
   // Show login screen if not authenticated (but has account)
-  if (!isAuthenticated && !needsSetup) {
+  // For now, in dev mode, we skip this
+  if (!isAuthenticated && !needsSetup && !isDeveloperMode) {
     return <LoginScreen />;
   }
 
