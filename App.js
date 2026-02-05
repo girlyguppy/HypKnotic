@@ -22,6 +22,7 @@ import DeveloperTab from './screens/DeveloperTab';
 import SetupScreen from './screens/SetupScreen';
 import LoginScreen from './screens/LoginScreen';
 import PartnerManagementScreen from './screens/PartnerManagementScreen';
+import ModeSwitcher from './components/ModeSwitcher';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Provider, useAtom } from 'jotai';
 import { themeAtom } from './atoms/themeAtom';
@@ -111,31 +112,7 @@ function MainTabs({ isDeveloperMode }) {
             <MaterialCommunityIcons name="menu" size={25} color={theme?.colors?.text || '#000000'} style={{ marginLeft: 15 }} />
           </TouchableOpacity>
         ),
-        headerRight: () => activeRel && !activeRel.isSolo ? (
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            marginRight: 15,
-            backgroundColor: theme?.colors?.primary + '20',
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 12,
-          }}>
-            <MaterialCommunityIcons 
-              name={activeRel.myRole === 'dom' ? 'shield' : (activeRel.myRole === 'sub' ? 'heart' : 'swap-horizontal')} 
-              size={16} 
-              color={theme?.colors?.primary || '#9C27B0'} 
-            />
-            <Text style={{ 
-              marginLeft: 4, 
-              color: theme?.colors?.primary || '#9C27B0',
-              fontSize: 12,
-              fontWeight: '600',
-            }}>
-              {activeRel.partnerName}
-            </Text>
-          </View>
-        ) : null,
+        headerRight: () => <ModeSwitcher />,
         headerTitleAlign: 'center',
       })}
     >
