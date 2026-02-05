@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { RewardsPunishmentsProvider } from './data/RewardsPunishmentsContext';
 import { HabitsProvider } from './data/HabitsContext';
+import { ProfileProvider } from './data/ProfileContext';
 import RewardsTab from './screens/RewardsTab';
 import PunishmentsTab from './screens/PunishmentsTab';
 import HabitsTab from './screens/HabitsTab';
@@ -114,41 +115,43 @@ export default function App() {
 
   return (
     <Provider>
-      <RewardsPunishmentsProvider>
-        <HabitsProvider>
-          <NavigationContainer>
-            <Drawer.Navigator
-              drawerContent={(props) => <CustomDrawerContent {...props} />}
-              screenOptions={({ navigation }) => ({
-                headerStyle: {
-                  backgroundColor: theme?.header?.backgroundColor || '#FFFFFF',
-                },
-                headerTintColor: theme?.header?.textColor || '#000000',
-                headerTitleStyle: {
-                  color: theme?.header?.textColor || '#000000',
-                },
-                headerLeft: () => (
-                  <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                    <MaterialCommunityIcons name="menu" size={25} color={theme?.header?.iconColor || '#000000'} style={{ marginLeft: 15 }} />
-                  </TouchableOpacity>
-                ),
-                headerTitleAlign: 'center',
-              })}
-            >
-              <Drawer.Screen name="MainTabs" options={{ headerShown: false }}>
-                {(props) => <MainTabs {...props} isDeveloperMode={isDeveloperMode} />}
-              </Drawer.Screen>
-              <Drawer.Screen name="Profile" component={ProfileScreen} />
-              <Drawer.Screen name="Themes" component={ThemesScreen} />
-              <Drawer.Screen name="Notifications" component={NotificationsScreen} />
-              <Drawer.Screen name="History" component={HistoryScreen} />
-              <Drawer.Screen name="Settings">
-                {(props) => <SettingsScreen {...props} isDeveloperMode={isDeveloperMode} setIsDeveloperMode={setIsDeveloperMode} />}
-              </Drawer.Screen>
-            </Drawer.Navigator>
-          </NavigationContainer>
-        </HabitsProvider>
-      </RewardsPunishmentsProvider>
+      <ProfileProvider>
+        <RewardsPunishmentsProvider>
+          <HabitsProvider>
+            <NavigationContainer>
+              <Drawer.Navigator
+                drawerContent={(props) => <CustomDrawerContent {...props} />}
+                screenOptions={({ navigation }) => ({
+                  headerStyle: {
+                    backgroundColor: theme?.header?.backgroundColor || '#FFFFFF',
+                  },
+                  headerTintColor: theme?.header?.textColor || '#000000',
+                  headerTitleStyle: {
+                    color: theme?.header?.textColor || '#000000',
+                  },
+                  headerLeft: () => (
+                    <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                      <MaterialCommunityIcons name="menu" size={25} color={theme?.header?.iconColor || '#000000'} style={{ marginLeft: 15 }} />
+                    </TouchableOpacity>
+                  ),
+                  headerTitleAlign: 'center',
+                })}
+              >
+                <Drawer.Screen name="MainTabs" options={{ headerShown: false }}>
+                  {(props) => <MainTabs {...props} isDeveloperMode={isDeveloperMode} />}
+                </Drawer.Screen>
+                <Drawer.Screen name="Profile" component={ProfileScreen} />
+                <Drawer.Screen name="Themes" component={ThemesScreen} />
+                <Drawer.Screen name="Notifications" component={NotificationsScreen} />
+                <Drawer.Screen name="History" component={HistoryScreen} />
+                <Drawer.Screen name="Settings">
+                  {(props) => <SettingsScreen {...props} isDeveloperMode={isDeveloperMode} setIsDeveloperMode={setIsDeveloperMode} />}
+                </Drawer.Screen>
+              </Drawer.Navigator>
+            </NavigationContainer>
+          </HabitsProvider>
+        </RewardsPunishmentsProvider>
+      </ProfileProvider>
     </Provider>
   );
 }
