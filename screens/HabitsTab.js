@@ -8,11 +8,17 @@ import sanitizeHtml from 'sanitize-html';
 import { useHabits } from '../data/HabitsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
+import { useRelationship } from '../data/RelationshipContext';
 
 export default function HabitsTab() {
   const { tasks, setTasks, addTask } = useHabits();
   const { rewards, punishments, updatePunishmentCount, updateRewardCount, addPoints, subtractPoints } = useRewardsPunishments();
+  const { currentMode, soloMode } = useRelationship();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  
+  // Mode-based permissions
+  const canCreateTasks = currentMode === 'dom' || soloMode;
+  const canCompleteTasks = currentMode === 'sub' || soloMode;
   const [currentStep, setCurrentStep] = useState(1);
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
@@ -700,7 +706,8 @@ export default function HabitsTab() {
         <Text style={dynamicStyles.taskText}>Slipups: {item.slipups}/{item.maxSlipups}</Text>
       )}
       <View style={dynamicStyles.row}>
-        {item.mode === 'task' && !item.isCompleted && (
+        {/* Complete/Progress buttons - Only in Sub mode */}
+        {canCompleteTasks && item.mode === 'task' && !item.isCompleted && (
           <TouchableOpacity 
             style={dynamicStyles.progressButton}
             onPress={() => handleCompleteTask(item)}
@@ -713,7 +720,7 @@ export default function HabitsTab() {
             <Text style={dynamicStyles.completedButtonText}>✓ Completed</Text>
           </TouchableOpacity>
         )}
-        {item.mode === 'badHabit' && !item.hasFailed && (
+        {canCompleteTasks && item.mode === 'badHabit' && !item.hasFailed && (
           <TouchableOpacity 
             style={dynamicStyles.slipupButton}
             onPress={() => handleSlipup(item)}
@@ -726,24 +733,46 @@ export default function HabitsTab() {
             <Text style={dynamicStyles.failedButtonText}>Failed</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity 
-          style={dynamicStyles.deleteButton}
-          onPress={() => handleDeleteTask(item)}
-        >
-          <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
+        {/* Delete button - Only in Dom mode */}
+        {canCreateTasks && (
+          <TouchableOpacity 
+            style={dynamicStyles.deleteButton}
+            onPress={() => handleDeleteTask(item)}
+          >
+            <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={dynamicStyles.container}>
-      <TouchableOpacity
-        style={dynamicStyles.addButton}
-        onPress={() => setIsModalVisible(true)}
-      >
-        <Text style={dynamicStyles.addButtonText}>+ Add Task</Text>
-      </TouchableOpacity>
+      {/* Mode Indicator */}
+      <View style={{ backgroundColor: currentMode === 'dom' ? '#9B59B6' : '#E91E63', padding: 8, borderRadius: 8, marginBottom: 10, alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+          {soloMode ? '🔄 Solo Mode' : currentMode === 'dom' ? '🔒 Dom Mode - Create Tasks' : '💗 Sub Mode - Complete Tasks'}
+        </Text>
+      </View>
+
+      {/* Add Task Button - Only in Dom mode */}
+      {canCreateTasks && (
+        <TouchableOpacity
+          style={dynamicStyles.addButton}
+          onPress={() => setIsModalVisible(true)}
+        >
+          <Text style={dynamicStyles.addButtonText}>+ Add Task</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Sub mode message */}
+      {!canCreateTasks && (
+        <View style={{ backgroundColor: '#f8d7da', padding: 12, borderRadius: 8, marginBottom: 10 }}>
+          <Text style={{ color: '#721c24', textAlign: 'center' }}>
+            📋 In Sub Mode - Complete tasks assigned to you below
+          </Text>
+        </View>
+      )}
 
       {/* Reorder Mode Toggle */}
       {tasks.length > 1 && (

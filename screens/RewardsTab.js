@@ -4,16 +4,22 @@ import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useHistory, HistoryType } from '../data/HistoryContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
+import { useRelationship } from '../data/RelationshipContext';
 
 export default function RewardsTab() {
   const { rewards, addReward, removeReward, updateRewardCount, totalPoints, addPoints, subtractPoints } = useRewardsPunishments();
   const { addHistoryEntry } = useHistory();
+  const { currentMode, soloMode } = useRelationship();
   const [theme] = useAtom(themeAtom);
   const [rewardName, setRewardName] = useState('');
   const [rewardDescription, setRewardDescription] = useState('');
   const [rewardPoints, setRewardPoints] = useState('0');
   const [showAddReward, setShowAddReward] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Mode-based permissions: Dom creates rewards, Sub uses rewards
+  const canCreateRewards = currentMode === 'dom' || soloMode;
+  const canUseRewards = currentMode === 'sub' || soloMode;
 
   // Create dynamic styles based on theme
   const dynamicStyles = useMemo(() => ({
@@ -340,10 +346,27 @@ export default function RewardsTab() {
       <Text style={dynamicStyles.title}>Rewards</Text>
       <Text style={dynamicStyles.totalPoints}>Total Points: {totalPoints}</Text>
 
-      {!showAddReward && (
+      {/* Mode Indicator */}
+      <View style={{ backgroundColor: currentMode === 'dom' ? '#9B59B6' : '#E91E63', padding: 8, borderRadius: 8, marginBottom: 10, alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+          {soloMode ? '🔄 Solo Mode' : currentMode === 'dom' ? '🔒 Dom Mode - Create Rewards' : '💗 Sub Mode - Purchase & Use Rewards'}
+        </Text>
+      </View>
+
+      {/* Add Reward - Only in Dom mode */}
+      {canCreateRewards && !showAddReward && (
         <TouchableOpacity style={dynamicStyles.addButton} onPress={() => setShowAddReward(true)}>
           <Text style={dynamicStyles.addButtonText}>+ Add Reward</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Sub mode message */}
+      {!canCreateRewards && (
+        <View style={{ backgroundColor: '#d4edda', padding: 12, borderRadius: 8, marginBottom: 10 }}>
+          <Text style={{ color: '#155724', textAlign: 'center' }}>
+            🎁 In Sub Mode - Purchase and use rewards below
+          </Text>
+        </View>
       )}
 
       <Modal visible={showAddReward} animationType="slide" transparent={true}>
@@ -398,7 +421,8 @@ export default function RewardsTab() {
             <Text style={dynamicStyles.rewardPoints}>{reward.points} Points</Text>
             {reward.points > 0 && <Text style={dynamicStyles.rewardQuantity}>Owned: {reward.quantity}</Text>}
             <View style={dynamicStyles.row}>
-              {reward.points > 0 ? (
+              {/* Purchase button - Only in Sub mode */}
+              {canUseRewards && reward.points > 0 ? (
                 <TouchableOpacity
                   style={dynamicStyles.purchaseButton}
                   onPress={() => handlePurchaseReward(reward)}
@@ -406,18 +430,24 @@ export default function RewardsTab() {
                   <Text style={dynamicStyles.purchaseButtonText}>Purchase</Text>
                 </TouchableOpacity>
               ) : null}
-              <TouchableOpacity
-                style={dynamicStyles.useButton}
-                onPress={() => handleUseReward(reward)}
-              >
-                <Text style={dynamicStyles.useButtonText}>Use</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={dynamicStyles.deleteButton}
-                onPress={() => handleDeleteReward(reward)}
-              >
-                <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
+              {/* Use button - Only in Sub mode */}
+              {canUseRewards && (
+                <TouchableOpacity
+                  style={dynamicStyles.useButton}
+                  onPress={() => handleUseReward(reward)}
+                >
+                  <Text style={dynamicStyles.useButtonText}>Use</Text>
+                </TouchableOpacity>
+              )}
+              {/* Delete button - Only in Dom mode */}
+              {canCreateRewards && (
+                <TouchableOpacity
+                  style={dynamicStyles.deleteButton}
+                  onPress={() => handleDeleteReward(reward)}
+                >
+                  <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         ))

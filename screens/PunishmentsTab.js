@@ -3,13 +3,18 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, A
 import { useRewardsPunishments } from '../data/RewardsPunishmentsContext';
 import { useAtom } from 'jotai';
 import { themeAtom } from '../atoms/themeAtom';
+import { useRelationship } from '../data/RelationshipContext';
 
 export default function PunishmentsTab() {
   const [theme] = useAtom(themeAtom);
   const { punishments, addPunishment, removePunishment, updatePunishmentCount } = useRewardsPunishments();
+  const { currentMode, soloMode } = useRelationship();
   const [punishmentName, setPunishmentName] = useState('');
   const [punishmentDescription, setPunishmentDescription] = useState('');
   const [showAddPunishment, setShowAddPunishment] = useState(false);
+
+  // Mode-based permissions: Dom creates and assigns punishments, Sub sees them
+  const canCreatePunishments = currentMode === 'dom' || soloMode;
 
   const dynamicStyles = useMemo(() => StyleSheet.create({
     container: {
@@ -209,9 +214,28 @@ export default function PunishmentsTab() {
     <View style={dynamicStyles.container}>
       <Text style={dynamicStyles.punishmentName}>Punishments</Text>
 
-      <TouchableOpacity style={dynamicStyles.addButton} onPress={() => setShowAddPunishment(true)}>
-        <Text style={dynamicStyles.addButtonText}>+ Add Punishment</Text>
-      </TouchableOpacity>
+      {/* Mode Indicator */}
+      <View style={{ backgroundColor: currentMode === 'dom' ? '#9B59B6' : '#E91E63', padding: 8, borderRadius: 8, marginBottom: 10, alignItems: 'center' }}>
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+          {soloMode ? '🔄 Solo Mode' : currentMode === 'dom' ? '🔒 Dom Mode - Create Punishments' : '💗 Sub Mode - View Assigned Punishments'}
+        </Text>
+      </View>
+
+      {/* Add Punishment - Only in Dom mode */}
+      {canCreatePunishments && (
+        <TouchableOpacity style={dynamicStyles.addButton} onPress={() => setShowAddPunishment(true)}>
+          <Text style={dynamicStyles.addButtonText}>+ Add Punishment</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Sub mode message */}
+      {!canCreatePunishments && (
+        <View style={{ backgroundColor: '#f8d7da', padding: 12, borderRadius: 8, marginBottom: 10 }}>
+          <Text style={{ color: '#721c24', textAlign: 'center' }}>
+            ⚠️ In Sub Mode - View your assigned punishments below
+          </Text>
+        </View>
+      )}
 
       <FlatList
         data={punishments}
@@ -222,19 +246,25 @@ export default function PunishmentsTab() {
             {item.description ? <Text style={{ color: theme.textColor }}>{item.description}</Text> : null}
             <Text style={{ color: theme.textColor }}>Count: {item.count}</Text>
             <View style={dynamicStyles.row}>
-              <TouchableOpacity style={dynamicStyles.incrementButton} onPress={() => handleIncrementCount(item)}>
-                <Text style={dynamicStyles.incrementButtonText}>+</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={dynamicStyles.decrementButton} onPress={() => handleDecrementCount(item)}>
-                <Text style={dynamicStyles.decrementButtonText}>-</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={dynamicStyles.deleteButton} onPress={() => handleDeletePunishment(item)}>
-                <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
+              {/* Increment/Decrement - Only in Dom mode */}
+              {canCreatePunishments && (
+                <>
+                  <TouchableOpacity style={dynamicStyles.incrementButton} onPress={() => handleIncrementCount(item)}>
+                    <Text style={dynamicStyles.incrementButtonText}>+</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={dynamicStyles.decrementButton} onPress={() => handleDecrementCount(item)}>
+                    <Text style={dynamicStyles.decrementButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={dynamicStyles.deleteButton} onPress={() => handleDeletePunishment(item)}>
+                    <Text style={dynamicStyles.deleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
+            {/* Complete button - Only show when there are punishments to complete */}
             {item.count > 0 && (
               <TouchableOpacity style={dynamicStyles.completeButton} onPress={() => handleCompletePunishment(item)}>
-                <Text style={dynamicStyles.completeButtonText}>Complete</Text>
+                <Text style={dynamicStyles.completeButtonText}>Complete Punishment</Text>
               </TouchableOpacity>
             )}
           </View>
