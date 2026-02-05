@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useAtom } from 'jotai';
 import ColorPickerWheel from 'react-native-color-picker-wheel';
@@ -9,13 +9,16 @@ export default function ThemesScreen() {
   const [theme, setTheme] = useAtom(themeAtom);
   const [customColor, setCustomColor] = useState('#9B59B6');
   const [customDarkMode, setCustomDarkMode] = useState(false);
-  const [isCustomMode, setIsCustomMode] = useState(false);
   const hasUserInteracted = useRef(false);
 
   const themeList = Object.entries(themes);
+  
+  // Derive isCustomMode from whether current theme matches any preset
+  const isCustomMode = useMemo(() => {
+    return !themeList.some(([_, t]) => t.name === theme.name);
+  }, [theme.name, themeList]);
 
   const handleSelectTheme = (themeOption) => {
-    setIsCustomMode(false);
     setTheme(themeOption);
   };
 
@@ -23,7 +26,6 @@ export default function ThemesScreen() {
     // Only apply if user has actually interacted
     if (hasUserInteracted.current) {
       setCustomColor(color);
-      setIsCustomMode(true);
       setTheme(createCustomTheme(color, customDarkMode));
     }
   };
@@ -35,9 +37,14 @@ export default function ThemesScreen() {
   const handleDarkModeToggle = (value) => {
     hasUserInteracted.current = true;
     setCustomDarkMode(value);
-    setIsCustomMode(true);
     setTheme(createCustomTheme(customColor, value));
   };
+
+  // Helper for theme button border styling
+  const getThemeBorderStyle = (themeOption) => ({
+    borderWidth: theme.name === themeOption.name ? 3 : 0,
+    borderColor: theme.colors?.text || '#000',
+  });
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors?.background || theme.container?.backgroundColor || '#F3E8FF' }]}>
@@ -49,11 +56,8 @@ export default function ThemesScreen() {
             key={key}
             style={[
               styles.themeButton, 
-              { 
-                backgroundColor: themeOption.colors.primary,
-                borderWidth: theme.name === themeOption.name && !isCustomMode ? 3 : 0,
-                borderColor: theme.colors?.text || '#000',
-              }
+              { backgroundColor: themeOption.colors.primary },
+              getThemeBorderStyle(themeOption),
             ]} 
             onPress={() => handleSelectTheme(themeOption)}
           >

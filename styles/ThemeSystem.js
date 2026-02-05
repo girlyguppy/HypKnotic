@@ -397,7 +397,7 @@ export const createSemanticTheme = (config) => {
       backgroundColor: primary,
     },
     
-    // Old-style tabButtonText
+    // Old-style tabButtonText (for active tabs on primary background)
     tabButtonText: {
       color: textOnPrimary,
     },
